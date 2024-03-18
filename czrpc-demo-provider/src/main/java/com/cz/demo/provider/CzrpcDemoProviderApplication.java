@@ -24,35 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootApplication
-@RestController
-@Import(ProviderBootstrap.class)
 public class CzrpcDemoProviderApplication {
-
-    @Autowired
-    ProviderBootstrap providerBootstrap;
 
     public static void main(String[] args) {
         SpringApplication.run(CzrpcDemoProviderApplication.class, args);
     }
 
-
-    // http+json 实现序列化和通信
-    @RequestMapping("/")
-    public RpcResponse invoke(@RequestBody RpcRequest request) {
-        return providerBootstrap.invoke(request);
-    }
-
-
-    @Bean
-    ApplicationRunner privateRunner() {
-        return args -> {
-            System.out.println("Provider started");
-            RpcRequest rpcRequest = new RpcRequest();
-            rpcRequest.setService(UserService.class);
-            rpcRequest.setMethod("findById");
-            rpcRequest.setArgs(new Object[]{100});
-            RpcResponse invoke = invoke(rpcRequest);
-            System.out.println(invoke.getData());
-        };
-    }
 }
