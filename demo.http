@@ -3,9 +3,22 @@ POST http://localhost:8080/
 Content-Type: application/json
 
 {
-  "service": "com.cz.demo.api.UserService",
+  "service": "com.cz.demo.api.service.UserService",
   "method": "findById",
   "args": [100]
+}
+
+
+### 测试获取订单信息
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "service": "com.cz.demo.api.service.OrderService",
+  "method": "findById",
+  "args": [
+    200
+  ]
 }
 
 
