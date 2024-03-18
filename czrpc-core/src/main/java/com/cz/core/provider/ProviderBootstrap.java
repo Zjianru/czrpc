@@ -5,10 +5,8 @@ import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Bean;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * code desc
+ * 提供者注册逻辑
  *
  * @author Zjianru
  */

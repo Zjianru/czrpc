@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * code desc
+ * provider 配置类
  *
  * @author Zjianru
  */

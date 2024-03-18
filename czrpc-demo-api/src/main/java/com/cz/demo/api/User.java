@@ -4,6 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * demo - user pojo
+ *
+ * @author Zjianru
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
