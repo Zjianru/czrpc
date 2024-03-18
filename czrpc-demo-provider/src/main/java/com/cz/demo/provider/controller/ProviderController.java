@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * code desc
+ * HTTP 请求转化为 RPC 请求
+ * 完成接口测试
  *
  * @author Zjianru
  */
