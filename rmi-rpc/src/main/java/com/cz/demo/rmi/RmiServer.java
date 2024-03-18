@@ -18,6 +18,9 @@ import java.rmi.registry.Registry;
  */
 public class RmiServer {
     public static void main(String[] args) {
+        provideFunction();
+    }
+    public static void provideFunction(){
         try {
             // registry server by RMI
             Registry registry = LocateRegistry.createRegistry(9998);
@@ -30,7 +33,7 @@ public class RmiServer {
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
-
-
     }
+
+
 }

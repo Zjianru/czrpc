@@ -1,4 +1,4 @@
-package com.cz.czrpcdemoapi;
+package com.cz.demo.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

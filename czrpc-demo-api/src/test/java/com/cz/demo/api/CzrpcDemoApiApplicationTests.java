@@ -1,13 +1,13 @@
-package com.cz.czrpc.core;
+package com.cz.demo.api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CzrpcCoreApplicationTests {
+class CzrpcDemoApiApplicationTests {
 
-    @Test
-    void contextLoads() {
-    }
+	@Test
+	void contextLoads() {
+	}
 
 }

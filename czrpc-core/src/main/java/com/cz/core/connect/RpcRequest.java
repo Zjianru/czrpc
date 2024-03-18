@@ -1,4 +1,4 @@
-package com.cz.czrpc.core.connect;
+package com.cz.core.connect;
 
 import lombok.Data;
 
