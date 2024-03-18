@@ -1,4 +1,4 @@
-package com.cz.demo.api;
+package com.cz.demo.api.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

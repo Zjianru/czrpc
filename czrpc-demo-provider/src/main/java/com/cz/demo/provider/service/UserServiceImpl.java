@@ -1,12 +1,12 @@
-package com.cz.demo.provider.user;
+package com.cz.demo.provider.service;
 
 import com.cz.core.annotation.czProvider;
-import com.cz.demo.api.User;
-import com.cz.demo.api.UserService;
+import com.cz.demo.api.pojo.User;
+import com.cz.demo.api.service.UserService;
 import org.springframework.stereotype.Service;
 
 /**
- * czrpc - demo service
+ * czrpc - user demo service
  *
  * @author Zjianru
  */
