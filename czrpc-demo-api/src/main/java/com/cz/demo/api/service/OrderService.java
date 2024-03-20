@@ -8,5 +8,5 @@ import com.cz.demo.api.pojo.Order;
  * @author Zjianru
  */
 public interface OrderService {
-    Order findById(Long id);
+    Order findById(int id);
 }

@@ -20,7 +20,7 @@ public class OrderServiceImpl implements OrderService {
      * @return order pojo
      */
     @Override
-    public Order findById(Long id) {
+    public Order findById(int id) {
         return new Order(id, 99.9f);
     }
 }

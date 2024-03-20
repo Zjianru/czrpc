@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Order {
-    Long id;
+    Integer id;
     Float price;
 }
