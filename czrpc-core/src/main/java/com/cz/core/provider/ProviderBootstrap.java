@@ -1,5 +1,6 @@
 package com.cz.core.provider;
 
+import com.alibaba.fastjson2.JSON;
 import com.cz.core.annotation.czProvider;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
@@ -31,15 +32,35 @@ public class ProviderBootstrap implements ApplicationContextAware {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
         providers.values().forEach(this::getInterface);
     }
+
     public RpcResponse invoke(RpcRequest request) {
         Object bean = skeleton.get(request.getService().getCanonicalName());
-        try {
-            Method method = findMethod(bean.getClass(),request.getMethod());
-            Object result = method.invoke(bean, request.getArgs());
-            return new RpcResponse<>(true, result);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+        Class<?>[] argsType = request.getArgsType();
+        Object[] args = request.getArgs();
+        Method method = findMethod(bean.getClass(), request.getMethod(), argsType);
+
+        Object[] realArgs = new Object[argsType.length];
+        for (int i = 0; i < argsType.length; i++) {
+            Object realArg = JSON.to(argsType[i], args[i]);
+            realArgs[i] = realArg;
         }
+
+        RpcResponse response = new RpcResponse();
+        try {
+            Object result = method.invoke(bean, realArgs);
+            response.setStatus(true);
+            response.setData(result);
+        } catch (InvocationTargetException e) {
+            e.getTargetException().printStackTrace();
+            response.setStatus(false);
+            // 传播异常信息
+            response.setException(new RuntimeException(e.getTargetException().getMessage()));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            response.setStatus(false);
+            response.setException(new RuntimeException(e.getMessage()));
+        }
+        return response;
     }
 
     private void getInterface(Object bean) {
@@ -47,13 +68,11 @@ public class ProviderBootstrap implements ApplicationContextAware {
         skeleton.put(anInterface.getCanonicalName(), bean);
     }
 
-    private Method findMethod(Class<?> aClass, String methodName) {
-        for (Method method : aClass.getMethods()) {
-            if (method.getName().equals(methodName)) {
-                return method;
-            }
+    private Method findMethod(Class<?> aClass, String methodName, Class<?>[] argsType) {
+        try {
+            return aClass.getMethod(methodName, argsType);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
         }
-        return null;
     }
-
 }

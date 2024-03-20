@@ -12,5 +12,6 @@ public class RpcRequest {
     private Class service;
     private String method;
     private Object[] args;
+    private Class<?>[] argsType;
 
 }

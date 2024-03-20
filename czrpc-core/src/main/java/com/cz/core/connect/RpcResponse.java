@@ -15,4 +15,5 @@ import lombok.NoArgsConstructor;
 public class RpcResponse<T> {
     boolean status;
     T data;
+    Exception exception;
 }

@@ -14,13 +14,14 @@ import org.springframework.core.annotation.Order;
 @Configuration
 public class ConsumerConfig {
     @Bean
-    ConsumerBootstrap consumerBootstrap() {
+    @Order(1)
+    ConsumerBootstrap createConsumer() {
         return new ConsumerBootstrap();
     }
 
     @Bean
     @Order(Integer.MIN_VALUE)
-    public ApplicationRunner consumerBootstrapRunner(@Autowired ConsumerBootstrap consumerBootstrap) {
+    public ApplicationRunner consumerInit(@Autowired ConsumerBootstrap consumerBootstrap) {
         return args -> consumerBootstrap.start();
     }
 

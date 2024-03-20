@@ -3,6 +3,7 @@ package com.cz.core.consumer;
 import com.cz.core.annotation.czConsumer;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import lombok.Data;
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
@@ -21,6 +22,11 @@ public class ConsumerBootstrap implements ApplicationContextAware {
 
     private Map<String, Object> stub = new HashMap<>();
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
     public void start() {
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {
@@ -33,6 +39,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
                         consumer = ConsumerProxyFactory.create(service);
+                        stub.put(serviceName, consumer);
                     }
                     field.setAccessible(true);
                     field.set(bean, consumer);
