@@ -20,6 +20,7 @@ import java.util.Map;
  */
 @Data
 public class ProviderBootstrap implements ApplicationContextAware {
+
     ApplicationContext applicationContext;
 
     private Map<String, Object> skeleton = new HashMap<>();

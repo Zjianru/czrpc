@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Zjianru
  */
 @Configuration
-public class providerConfig {
+public class ProviderConfig {
     @Bean
     ProviderBootstrap providerBootstrap(){
         return new ProviderBootstrap();
