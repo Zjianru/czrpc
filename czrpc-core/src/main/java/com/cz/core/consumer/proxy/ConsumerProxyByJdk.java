@@ -30,15 +30,11 @@ public class ConsumerProxyByJdk implements InvocationHandler {
      * 动态代理已拦截请求，封装 RPC 请求并完成通信
      */
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) {
         if (isLocalMethod(method.getName())) {
             return null;
         }
-        RpcRequest request = new RpcRequest();
-        request.setService(service);
-        request.setMethod(method.getName());
-        request.setArgs(args);
-        request.setArgsType(method.getParameterTypes());
+        RpcRequest request = new RpcRequest(service, method.getName(), args, method.getParameterTypes());
         RpcResponse rpcResponse = RpcConnectByOkHttp(request);
         if (rpcResponse == null) {
             return new RuntimeException(
@@ -53,11 +49,9 @@ public class ConsumerProxyByJdk implements InvocationHandler {
                 return JSON.to(method.getReturnType(), rpcResponse.getData());
             }
         }
-//        else {
         // 服务端异常信息传播到客户端
         Exception exception = rpcResponse.getException();
         throw new RuntimeException(exception);
-//        }
     }
 
     /**
@@ -87,6 +81,12 @@ public class ConsumerProxyByJdk implements InvocationHandler {
         }
     }
 
+    /**
+     * 判断是否为本地方法
+     *
+     * @param method 方法名
+     * @return 是否为本地方法
+     */
     private boolean isLocalMethod(String method) {
         return "toString".equals(method) ||
                 "clone".equals(method) ||

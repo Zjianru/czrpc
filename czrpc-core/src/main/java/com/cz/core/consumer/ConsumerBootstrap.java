@@ -27,6 +27,10 @@ public class ConsumerBootstrap implements ApplicationContextAware {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * 启动消费者
+     * 收集目前使用到的提供者服务信息
+     */
     public void start() {
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {
@@ -46,10 +50,16 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
-
             });
         }
     }
+
+    /**
+     * 查找被注解的字段
+     *
+     * @param clazz 类
+     * @return List<Field>
+     */
 
     private List<Field> findAnnotatedField(Class<?> clazz) {
         // 取到的是被代理增强的子类
