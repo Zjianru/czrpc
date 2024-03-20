@@ -1,4 +1,4 @@
-package com.cz.core.consumer;
+package com.cz.core.consumer.proxy;
 
 import java.lang.reflect.Proxy;
 

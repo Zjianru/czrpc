@@ -1,6 +1,7 @@
 package com.cz.core.consumer;
 
 import com.cz.core.annotation.czConsumer;
+import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import lombok.Data;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
