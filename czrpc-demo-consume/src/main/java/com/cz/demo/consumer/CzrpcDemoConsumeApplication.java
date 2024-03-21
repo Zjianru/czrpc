@@ -28,7 +28,8 @@ public class CzrpcDemoConsumeApplication {
         return args -> {
             System.out.println("user test 111 -->" + userService.findById(100));
             System.out.println("user test 222 -->" + userService.findById(200, "test"));
-            System.out.println("user test 333 -->" + userService.ObjectParamCheck(new User(300, "test222")));
+            System.out.println("user test 333 -->" + userService.ObjectParamCheck(new User(300, "test222", 0L)));
+            System.out.println("user test 444 -->" + userService.findByIdentity(400L));
         };
     }
 }

@@ -1,29 +1,28 @@
-package com.cz.core.consumer.proxy;
+package com.cz.core.consumer.proxy.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.cz.core.connect.RpcConnect;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
+import com.cz.core.connect.impl.OkHttpConnectImpl;
 import com.cz.core.consumer.util.MethodUtils;
-import okhttp3.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 消费者代理类 - JDK 代理方式
  *
  * @author Zjianru
  */
-public class ConsumerProxyByJdk implements InvocationHandler {
+public class ProxyByJdk implements InvocationHandler {
     Class<?> service;
 
-    final MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
+    RpcConnect rpcConnect = new OkHttpConnectImpl();
 
-    public ConsumerProxyByJdk(Class<?> service) {
+    public ProxyByJdk(Class<?> service) {
         this.service = service;
     }
 
@@ -37,7 +36,7 @@ public class ConsumerProxyByJdk implements InvocationHandler {
         }
         String methodSign = MethodUtils.methodSign(method);
         RpcRequest request = new RpcRequest(service, method.getName(), methodSign, args, method.getParameterTypes());
-        RpcResponse rpcResponse = RpcConnectByOkHttp(request);
+        RpcResponse rpcResponse = rpcConnect.connect(request);
         if (rpcResponse == null) {
             return new RuntimeException(
                     String.format("Invoke class [%s] method [%s(%s)] error, params:[%S]",
@@ -56,31 +55,5 @@ public class ConsumerProxyByJdk implements InvocationHandler {
         throw new RuntimeException(exception);
     }
 
-    /**
-     * okHttp / netty / httpclient / jdk urlConnection
-     * RPC 通信
-     *
-     * @param rpcRequest rpc 请求数据
-     * @return rpc 相应
-     */
-    private RpcResponse RpcConnectByOkHttp(RpcRequest rpcRequest) {
-        try {
-            OkHttpClient httpClient = new OkHttpClient.Builder()
-                    .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
-                    .readTimeout(1, TimeUnit.SECONDS)
-                    .writeTimeout(1, TimeUnit.SECONDS)
-                    .connectTimeout(1, TimeUnit.SECONDS).build();
-            String requestJson = JSON.toJSONString(rpcRequest);
-            Request request = new Request.Builder()
-                    .url("http://localhost:8080/")
-                    .post(RequestBody.create(requestJson, JSON_TYPE))
-                    .build();
-            String response = Objects.requireNonNull(httpClient.newCall(request).execute().body()).string();
-            RpcResponse rpcResponse = JSON.parseObject(response, RpcResponse.class);
-            return rpcResponse;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
 }

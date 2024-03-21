@@ -34,4 +34,12 @@ public interface UserService {
      */
     User ObjectParamCheck(User user);
 
+    /**
+     * find user by identity
+     *
+     * @param ident ident
+     * @return user info
+     */
+    User findByIdentity(Long ident);
+
 }

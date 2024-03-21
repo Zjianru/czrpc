@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User findById(Integer id) {
-        return new User(id, "cz--" + System.currentTimeMillis());
+        return new User(id, "findById--" + System.currentTimeMillis(), 0L);
     }
 
     /**
@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User findById(Integer id, String name) {
-        return new User(id, name + "--" + System.currentTimeMillis());
+        return new User(id, "findById--" + name + "--" + System.currentTimeMillis(), 0L);
     }
 
     /**
@@ -45,5 +45,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public User ObjectParamCheck(User user) {
         return user;
+    }
+
+    /**
+     * find user by identity
+     *
+     * @param ident ident
+     * @return user info
+     */
+    @Override
+    public User findByIdentity(Long ident) {
+        return new User(0, "cz--" + ident, ident);
     }
 }

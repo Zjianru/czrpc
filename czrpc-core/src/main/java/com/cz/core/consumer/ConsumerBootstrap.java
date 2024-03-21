@@ -42,7 +42,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                     String serviceName = service.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = ConsumerProxyFactory.create(service);
+                        consumer = ConsumerProxyFactory.createByJDK(service);
                         stub.put(serviceName, consumer);
                     }
                     field.setAccessible(true);
