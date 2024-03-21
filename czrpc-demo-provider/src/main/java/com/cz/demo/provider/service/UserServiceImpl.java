@@ -35,4 +35,15 @@ public class UserServiceImpl implements UserService {
     public User findById(Integer id, String name) {
         return new User(id, name + "--" + System.currentTimeMillis());
     }
+
+    /**
+     * check user info
+     *
+     * @param user user info
+     * @return user
+     */
+    @Override
+    public User ObjectParamCheck(User user) {
+        return user;
+    }
 }

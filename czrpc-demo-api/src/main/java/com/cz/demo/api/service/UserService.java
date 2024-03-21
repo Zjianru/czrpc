@@ -26,4 +26,12 @@ public interface UserService {
      */
     User findById(Integer id, String name);
 
+    /**
+     * check user info
+     *
+     * @param user user info
+     * @return user
+     */
+    User ObjectParamCheck(User user);
+
 }
