@@ -1,17 +1,20 @@
 package com.cz.core.provider;
 
-import com.alibaba.fastjson2.JSON;
 import com.cz.core.annotation.czProvider;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
+import com.cz.core.consumer.util.MethodUtils;
+import com.cz.core.meta.ProviderMeta;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,31 +26,50 @@ import java.util.Map;
 public class ProviderBootstrap implements ApplicationContextAware {
 
     ApplicationContext applicationContext;
+    /**
+     * 服务提供者注册表 存储接口中方法级别的元数据
+     * key: service interface
+     * value: 接口中的所有自定义方法
+     */
+    private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
+    // issue #1
+//    private Map<String, Object> skeleton = new HashMap<>();
 
-    private Map<String, Object> skeleton = new HashMap<>();
 
-
+    /**
+     * 启动时完成 provider 注册
+     * 装配目前的 provider 信息
+     */
     @PostConstruct
-    public void scanProviders() {
+    public void start() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
         providers.values().forEach(this::getInterface);
     }
 
+    /**
+     * 完成 RPC 调用
+     *
+     * @param request RPC 请求信息
+     * @return RPC 返回数据
+     */
     public RpcResponse invoke(RpcRequest request) {
-        Object bean = skeleton.get(request.getService().getCanonicalName());
-        Class<?>[] argsType = request.getArgsType();
-        Object[] args = request.getArgs();
-        Method method = findMethod(bean.getClass(), request.getMethod(), argsType);
-
-        Object[] realArgs = new Object[argsType.length];
-        for (int i = 0; i < argsType.length; i++) {
-            Object realArg = JSON.to(argsType[i], args[i]);
-            realArgs[i] = realArg;
-        }
-
+        String methodSign = request.getMethodSign();
+        List<ProviderMeta> providerMetas = skeleton.get(request.getService().getCanonicalName());
+        // issue #1
+//        Class<?>[] argsType = request.getArgsType();
+//        Object[] args = request.getArgs();
+//        Method method = findMethod(bean.getClass(), request.getMethod(), argsType);
+//
+//        Object[] realArgs = new Object[argsType.length];
+//        for (int i = 0; i < argsType.length; i++) {
+//            Object realArg = JSON.to(argsType[i], args[i]);
+//            realArgs[i] = realArg;
+//        }
         RpcResponse response = new RpcResponse();
         try {
-            Object result = method.invoke(bean, realArgs);
+            ProviderMeta meta = findProviderMeta(methodSign, providerMetas);
+            Method method = meta.getMethod();
+            Object result = method.invoke(meta.getTargetService(), request.getArgs());
             response.setStatus(true);
             response.setData(result);
         } catch (InvocationTargetException e) {
@@ -63,11 +85,67 @@ public class ProviderBootstrap implements ApplicationContextAware {
         return response;
     }
 
-    private void getInterface(Object bean) {
-        Class<?> anInterface = bean.getClass().getInterfaces()[0];
-        skeleton.put(anInterface.getCanonicalName(), bean);
+    /**
+     * 查找元数据
+     *
+     * @param methodSign    方法签名
+     * @param providerMetas skeleton 桩子中的元数据链（记录信息为 method 级别）
+     * @return ProviderMeta
+     */
+    private ProviderMeta findProviderMeta(String methodSign, List<ProviderMeta> providerMetas) {
+        return providerMetas.stream()
+                .filter(meta -> meta.getMethodSign().equals(methodSign))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("no such method"));
     }
 
+    /**
+     * 获取接口信息
+     *
+     * @param bean tagged service
+     */
+    private void getInterface(Object bean) {
+        Class<?> anInterface = bean.getClass().getInterfaces()[0];
+        Method[] methods = anInterface.getMethods();
+        for (Method method : methods) {
+            if (MethodUtils.isLocalMethod(method)) {
+                continue;
+            }
+            createProvider(anInterface, bean, method);
+        }
+//        skeleton.put(anInterface.getCanonicalName(), bean);
+        // 打印 skeleton 当前的注册信息
+        System.out.println("current skeleton size is -->" + skeleton.size());
+        for (String s : skeleton.keySet()) {
+            System.out.println("skeleton key = " + s + " value = " + skeleton.get(s));
+        }
+
+    }
+
+
+    /**
+     * 装配元信息
+     *
+     * @param anInterface key's resource
+     * @param bean        service bean
+     * @param method      service method
+     */
+    private void createProvider(Class<?> anInterface, Object bean, Method method) {
+        ProviderMeta providerMeta = new ProviderMeta();
+        providerMeta.setMethod(method);
+        providerMeta.setTargetService(bean);
+        providerMeta.setMethodSign(MethodUtils.methodSign(method));
+        skeleton.add(anInterface.getCanonicalName(), providerMeta);
+    }
+
+    /**
+     * 根据参数类型查找方法
+     *
+     * @param aClass     service
+     * @param methodName 方法名
+     * @param argsType   参数类型
+     * @return declare method
+     */
     private Method findMethod(Class<?> aClass, String methodName, Class<?>[] argsType) {
         try {
             return aClass.getMethod(methodName, argsType);

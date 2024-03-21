@@ -35,7 +35,8 @@ public class ConsumerProxyByJdk implements InvocationHandler {
         if (MethodUtils.isLocalMethod(method.getName())) {
             return null;
         }
-        RpcRequest request = new RpcRequest(service, method.getName(), args, method.getParameterTypes());
+        String methodSign = MethodUtils.methodSign(method);
+        RpcRequest request = new RpcRequest(service, method.getName(), methodSign, args, method.getParameterTypes());
         RpcResponse rpcResponse = RpcConnectByOkHttp(request);
         if (rpcResponse == null) {
             return new RuntimeException(
