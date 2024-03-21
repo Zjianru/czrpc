@@ -13,8 +13,26 @@ import org.springframework.stereotype.Service;
 @Service
 @czProvider
 public class UserServiceImpl implements UserService {
+    /**
+     * find user by id
+     *
+     * @param id id
+     * @return user info
+     */
     @Override
     public User findById(Integer id) {
         return new User(id, "cz--" + System.currentTimeMillis());
+    }
+
+    /**
+     * find user by id and name
+     *
+     * @param id   id
+     * @param name name
+     * @return user info
+     */
+    @Override
+    public User findById(Integer id, String name) {
+        return new User(id, name + "--" + System.currentTimeMillis());
     }
 }

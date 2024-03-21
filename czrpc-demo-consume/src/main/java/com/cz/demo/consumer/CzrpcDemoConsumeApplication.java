@@ -25,8 +25,8 @@ public class CzrpcDemoConsumeApplication {
     @Bean
     public ApplicationRunner consumerRunner() {
         return args -> {
-            System.out.println("user test -->" + userService.findById(100));
-            System.out.println("order test -->" + orderService.findById(100));
+            System.out.println("user test 111 -->" + userService.findById(100));
+            System.out.println("user test 222 -->" + userService.findById(100, "test"));
         };
     }
 }

@@ -8,6 +8,22 @@ import com.cz.demo.api.pojo.User;
  * @author Zjianru
  */
 public interface UserService {
+
+    /**
+     * find user by id
+     *
+     * @param id id
+     * @return user info
+     */
     User findById(Integer id);
+
+    /**
+     * find user by id and name
+     *
+     * @param id   id
+     * @param name name
+     * @return user info
+     */
+    User findById(Integer id, String name);
 
 }
