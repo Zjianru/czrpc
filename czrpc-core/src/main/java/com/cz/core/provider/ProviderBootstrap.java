@@ -1,5 +1,6 @@
 package com.cz.core.provider;
 
+import com.alibaba.fastjson2.JSON;
 import com.cz.core.annotation.czProvider;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
@@ -55,21 +56,20 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public RpcResponse invoke(RpcRequest request) {
         String methodSign = request.getMethodSign();
         List<ProviderMeta> providerMetas = skeleton.get(request.getService().getCanonicalName());
+        Class<?>[] argsType = request.getArgsType();
+        Object[] args = request.getArgs();
         // issue #1
-//        Class<?>[] argsType = request.getArgsType();
-//        Object[] args = request.getArgs();
 //        Method method = findMethod(bean.getClass(), request.getMethod(), argsType);
-//
-//        Object[] realArgs = new Object[argsType.length];
-//        for (int i = 0; i < argsType.length; i++) {
-//            Object realArg = JSON.to(argsType[i], args[i]);
-//            realArgs[i] = realArg;
-//        }
+        Object[] realArgs = new Object[argsType.length];
+        for (int i = 0; i < argsType.length; i++) {
+            Object realArg = JSON.to(argsType[i], args[i]);
+            realArgs[i] = realArg;
+        }
         RpcResponse response = new RpcResponse();
         try {
             ProviderMeta meta = findProviderMeta(methodSign, providerMetas);
             Method method = meta.getMethod();
-            Object result = method.invoke(meta.getTargetService(), request.getArgs());
+            Object result = method.invoke(meta.getTargetService(), realArgs);
             response.setStatus(true);
             response.setData(result);
         } catch (InvocationTargetException e) {
