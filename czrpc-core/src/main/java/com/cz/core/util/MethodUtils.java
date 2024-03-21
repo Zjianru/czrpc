@@ -1,4 +1,4 @@
-package com.cz.core.consumer.util;
+package com.cz.core.util;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

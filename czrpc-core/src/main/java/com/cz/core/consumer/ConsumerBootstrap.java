@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 /**
- * code desc
+ * consumer 启动并完成注册
  *
  * @author Zjianru
  */

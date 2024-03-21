@@ -6,7 +6,7 @@ import com.cz.core.connect.RpcConnect;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
 import com.cz.core.connect.impl.OkHttpConnectImpl;
-import com.cz.core.consumer.util.MethodUtils;
+import com.cz.core.util.MethodUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
