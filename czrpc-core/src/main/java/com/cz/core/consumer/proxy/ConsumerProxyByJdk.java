@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
+import com.cz.core.consumer.util.MethodUtils;
 import okhttp3.*;
 
 import java.lang.reflect.InvocationHandler;
@@ -31,7 +32,7 @@ public class ConsumerProxyByJdk implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        if (isLocalMethod(method.getName())) {
+        if (MethodUtils.isLocalMethod(method.getName())) {
             return null;
         }
         RpcRequest request = new RpcRequest(service, method.getName(), args, method.getParameterTypes());
@@ -80,23 +81,5 @@ public class ConsumerProxyByJdk implements InvocationHandler {
             throw new RuntimeException(e);
         }
     }
-
-    /**
-     * 判断是否为本地方法
-     *
-     * @param method 方法名
-     * @return 是否为本地方法
-     */
-    private boolean isLocalMethod(String method) {
-        return "toString".equals(method) ||
-                "clone".equals(method) ||
-                "hashCode".equals(method) ||
-                "equals".equals(method) ||
-                "wait".equals(method) ||
-                "getClass".equals(method) ||
-                "notifyAll".equals(method) ||
-                "notify".equals(method);
-    }
-
 
 }
