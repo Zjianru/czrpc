@@ -5,6 +5,9 @@ import com.cz.demo.api.pojo.User;
 import com.cz.demo.api.service.UserService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * czrpc - user demo service
  *
@@ -13,48 +16,64 @@ import org.springframework.stereotype.Service;
 @Service
 @czProvider
 public class UserServiceImpl implements UserService {
-    /**
-     * find user by id
-     *
-     * @param id id
-     * @return user info
-     */
     @Override
-    public User findById(Integer id) {
-        return new User(id, "findById--" + System.currentTimeMillis(), 0L);
+    public User findById(int id) {
+        return new User(id, "cz-" + System.currentTimeMillis());
     }
 
-    /**
-     * find user by id and name
-     *
-     * @param id   id
-     * @param name name
-     * @return user info
-     */
     @Override
-    public User findById(Integer id, String name) {
-        return new User(id, "findById--" + name + "--" + System.currentTimeMillis(), 0L);
+    public User findById(int id, String name) {
+        return new User(id, "cz-" + name + "_" + System.currentTimeMillis());
     }
 
-    /**
-     * check user info
-     *
-     * @param user user info
-     * @return user
-     */
     @Override
-    public User ObjectParamCheck(User user) {
-        return user;
+    public long getId(long id) {
+        return id;
     }
 
-    /**
-     * find user by identity
-     *
-     * @param ident ident
-     * @return user info
-     */
     @Override
-    public User findByIdentity(Long ident) {
-        return new User(0, "cz--" + ident, ident);
+    public long getId(User user) {
+        return user.getId().longValue();
     }
+
+    @Override
+    public long getId(float id) {
+        return 1L;
+    }
+
+    @Override
+    public String getName() {
+        return "cz123";
+    }
+
+    @Override
+    public String getName(int id) {
+        return "cz-" + id;
+    }
+
+    @Override
+    public int[] getIds() {
+        return new int[]{100, 200, 300};
+    }
+
+    @Override
+    public long[] getLongIds() {
+        return new long[]{1, 2, 3};
+    }
+
+    @Override
+    public int[] getIds(int[] ids) {
+        return ids;
+    }
+
+    @Override
+    public List<User> getList(List<User> userList) {
+        return userList;
+    }
+
+    @Override
+    public Map<String, User> getMap(Map<String, User> userMap) {
+        return userMap;
+    }
+
 }

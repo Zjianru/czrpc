@@ -18,5 +18,4 @@ public class User implements Serializable {
 
     Integer id;
     String name;
-    Long ident;
 }

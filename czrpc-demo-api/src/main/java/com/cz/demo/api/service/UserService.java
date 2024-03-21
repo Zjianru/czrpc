@@ -2,6 +2,9 @@ package com.cz.demo.api.service;
 
 import com.cz.demo.api.pojo.User;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * demo - user interface
  *
@@ -9,37 +12,28 @@ import com.cz.demo.api.pojo.User;
  */
 public interface UserService {
 
-    /**
-     * find user by id
-     *
-     * @param id id
-     * @return user info
-     */
-    User findById(Integer id);
+    User findById(int id);
 
-    /**
-     * find user by id and name
-     *
-     * @param id   id
-     * @param name name
-     * @return user info
-     */
-    User findById(Integer id, String name);
+    User findById(int id, String name);
 
-    /**
-     * check user info
-     *
-     * @param user user info
-     * @return user
-     */
-    User ObjectParamCheck(User user);
+    long getId(long id);
 
-    /**
-     * find user by identity
-     *
-     * @param ident ident
-     * @return user info
-     */
-    User findByIdentity(Long ident);
+    long getId(User user);
+
+    long getId(float id);
+
+    String getName();
+
+    String getName(int id);
+
+    int[] getIds();
+
+    long[] getLongIds();
+
+    int[] getIds(int[] ids);
+
+    List<User> getList(List<User> userList);
+
+    Map<String, User> getMap(Map<String, User> userMap);
 
 }
