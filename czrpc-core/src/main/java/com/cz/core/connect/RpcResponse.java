@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * rpc - 返回信息包装
  *
@@ -12,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RpcResponse<T> {
+public class RpcResponse<T> implements Serializable {
     boolean status;
     T data;
     Exception exception;
