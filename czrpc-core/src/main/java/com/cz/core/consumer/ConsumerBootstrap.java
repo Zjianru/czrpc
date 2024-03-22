@@ -5,6 +5,7 @@ import com.cz.core.connect.LoadBalancer;
 import com.cz.core.connect.Router;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
+import com.cz.core.register.RegistryCenter;
 import lombok.Data;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -48,7 +49,8 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         // TODO 添加 filter 链
         rpcContext.setFilters(new ArrayList<>());
 
-        List<String> providerUrls = getProviderUrls();
+        RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
+
         // 获取提供者服务信息
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {
@@ -60,7 +62,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                     String serviceName = service.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = ConsumerProxyFactory.createByJDK(service, rpcContext, providerUrls);
+                        consumer = createFromRegistry(service, rpcContext, registryCenter);
                         stub.put(serviceName, consumer);
                     }
                     field.setAccessible(true);
@@ -73,16 +75,17 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     }
 
     /**
-     * 获取提供者信息
+     * 通过注册中心完成获取 provider 的信息
      *
-     * @return providers
+     * @param service        服务
+     * @param rpcContext     rpc 上下文
+     * @param registryCenter 注册中心
+     * @return Object
      */
-    private List<String> getProviderUrls() {
-        String urls = environment.getProperty("czRpc.providers", "");
-        if (urls.isEmpty()) {
-            System.out.println("No provider found");
-        }
-        return List.of(urls.split(","));
+    private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
+        String serviceName = service.getCanonicalName();
+        List<String> providerUrls = registryCenter.fetchAll(serviceName);
+        return ConsumerProxyFactory.createByJDK(service, rpcContext, providerUrls);
     }
 
     /**
@@ -91,7 +94,6 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      * @param clazz 类
      * @return List<Field>
      */
-
     private List<Field> findAnnotatedField(Class<?> clazz) {
         // 取到的是被代理增强的子类
         List<Field> result = new ArrayList<>();
