@@ -4,4 +4,4 @@ spring:
   application:
     name: czrpc-demo-consume
 czRpc:
-  providers: http://localhost:8081/endPoint1,http://localhost:8082/endPoint2
+  providers: http://localhost:8081/endPoint1,http://localhost:8082/endPoint1,http://localhost:8083/endPoint1
