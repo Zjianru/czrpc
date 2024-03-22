@@ -1,11 +1,16 @@
 package com.cz.core.consumer;
 
 import com.cz.core.annotation.czConsumer;
+import com.cz.core.connect.LoadBalancer;
+import com.cz.core.connect.Router;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
+import com.cz.core.context.RpcContext;
 import lombok.Data;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -16,9 +21,10 @@ import java.util.*;
  * @author Zjianru
  */
 @Data
-public class ConsumerBootstrap implements ApplicationContextAware {
+public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAware {
 
     ApplicationContext applicationContext;
+    Environment environment;
 
     private Map<String, Object> stub = new HashMap<>();
 
@@ -32,6 +38,18 @@ public class ConsumerBootstrap implements ApplicationContextAware {
      * 收集目前使用到的提供者服务信息
      */
     public void start() {
+        // 获取负载均衡信息
+        Router router = applicationContext.getBean(Router.class);
+        LoadBalancer loadBalancer = applicationContext.getBean(LoadBalancer.class);
+
+        RpcContext rpcContext = new RpcContext();
+        rpcContext.setRouter(router);
+        rpcContext.setLoadBalancer(loadBalancer);
+        // TODO 添加 filter 链
+        rpcContext.setFilters(new ArrayList<>());
+
+        List<String> providerUrls = getProviderUrls();
+        // 获取提供者服务信息
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {
             Object bean = applicationContext.getBean(name);
@@ -42,7 +60,7 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                     String serviceName = service.getCanonicalName();
                     Object consumer = stub.get(serviceName);
                     if (consumer == null) {
-                        consumer = ConsumerProxyFactory.createByJDK(service);
+                        consumer = ConsumerProxyFactory.createByJDK(service, rpcContext, providerUrls);
                         stub.put(serviceName, consumer);
                     }
                     field.setAccessible(true);
@@ -52,6 +70,19 @@ public class ConsumerBootstrap implements ApplicationContextAware {
                 }
             });
         }
+    }
+
+    /**
+     * 获取提供者信息
+     *
+     * @return providers
+     */
+    private List<String> getProviderUrls() {
+        String urls = environment.getProperty("czRpc.providers", "");
+        if (urls.isEmpty()) {
+            System.out.println("No provider found");
+        }
+        return List.of(urls.split(","));
     }
 
     /**

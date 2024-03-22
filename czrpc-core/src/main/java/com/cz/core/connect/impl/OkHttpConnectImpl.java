@@ -25,10 +25,11 @@ public class OkHttpConnectImpl implements RpcConnect {
      * connect provider and send meta data
      *
      * @param rpcRequest request info
+     * @param providerUrl 负载均衡后得到的提供者请求路径
      * @return response
      */
     @Override
-    public RpcResponse connect(RpcRequest rpcRequest) {
+    public RpcResponse connect(RpcRequest rpcRequest, String providerUrl) {
         try {
             OkHttpClient httpClient = new OkHttpClient.Builder()
                     .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
@@ -37,7 +38,7 @@ public class OkHttpConnectImpl implements RpcConnect {
                     .connectTimeout(1, TimeUnit.SECONDS).build();
             String requestJson = JSON.toJSONString(rpcRequest);
             Request request = new Request.Builder()
-                    .url("http://localhost:8080/")
+                    .url(providerUrl)
                     .post(RequestBody.create(requestJson, JSON_TYPE))
                     .build();
             String response = Objects.requireNonNull(httpClient.newCall(request).execute().body()).string();

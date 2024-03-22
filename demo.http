@@ -1,24 +1,44 @@
-### 测试获取用户信息
-POST http://localhost:8080/
+### 测试获取用户信息 -8081
+POST http://localhost:8081/endPoint1
 Content-Type: application/json
 
 {
   "service": "com.cz.demo.api.service.UserService",
   "method": "findById",
-  "args": [100]
+  "methodSign": "findById@1_int",
+  "args": [
+    100
+  ]
 }
 
-
-### 测试获取订单信息
-POST http://localhost:8080/
+### 测试获取用户信息 - 8082
+POST http://localhost:8082/endPoint1
 Content-Type: application/json
 
 {
-  "service": "com.cz.demo.api.service.OrderService",
+  "service": "com.cz.demo.api.service.UserService",
   "method": "findById",
+  "methodSign": "findById@1_int",
   "args": [
     200
   ]
 }
 
+
+### 测试获取订单信息
+POST http://localhost:8081/endPoint1
+Content-Type: application/json
+
+{
+  "service": "com.cz.demo.api.service.OrderService",
+  "method": "findById",
+  "methodSign": "findById@1_int",
+  "args": [
+    200
+  ]
+}
+
+
+### 测试获取订单信息
+GET http://localhost:8088/findById?id=122
 

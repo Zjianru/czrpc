@@ -37,8 +37,8 @@ public class CzrpcDemoConsumeApplication {
 
             // 测试方法重载，同名方法，参数不同
             System.out.println("Case 2. >>===[测试方法重载，同名方法，参数不同===");
-            User user1 = userService.findById(1, "hubao");
-            System.out.println("RPC result userService.findById(1, \"hubao\") = " + user1);
+            User user1 = userService.findById(1, "czzc");
+            System.out.println("RPC result userService.findById(1, \"czcz\") = " + user1);
 
             // 测试返回字符串
             System.out.println("Case 3. >>===[测试返回字符串]===");

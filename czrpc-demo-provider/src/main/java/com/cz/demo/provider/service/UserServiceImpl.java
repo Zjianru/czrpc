@@ -3,6 +3,8 @@ package com.cz.demo.provider.service;
 import com.cz.core.annotation.czProvider;
 import com.cz.demo.api.pojo.User;
 import com.cz.demo.api.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,14 +18,17 @@ import java.util.Map;
 @Service
 @czProvider
 public class UserServiceImpl implements UserService {
+    @Autowired
+    Environment environment;
+
     @Override
     public User findById(int id) {
-        return new User(id, "cz-" + System.currentTimeMillis());
+        return new User(id, environment.getProperty("server.port", "") + "cz-" + System.currentTimeMillis());
     }
 
     @Override
     public User findById(int id, String name) {
-        return new User(id, "cz-" + name + "_" + System.currentTimeMillis());
+        return new User(id, environment.getProperty("server.port", "") + "cz-" + name + "_" + System.currentTimeMillis());
     }
 
     @Override
@@ -43,12 +48,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String getName() {
-        return "cz123";
+        return environment.getProperty("server.port", "") + "cz123";
     }
 
     @Override
     public String getName(int id) {
-        return "cz-" + id;
+        return environment.getProperty("server.port", "") + "cz-" + id;
     }
 
     @Override

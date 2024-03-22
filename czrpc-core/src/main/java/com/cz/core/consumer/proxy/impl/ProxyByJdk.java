@@ -3,10 +3,10 @@ package com.cz.core.consumer.proxy.impl;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.cz.core.connect.RpcConnect;
-import com.cz.core.connect.RpcRequest;
-import com.cz.core.connect.RpcResponse;
+import com.cz.core.connect.*;
 import com.cz.core.connect.impl.OkHttpConnectImpl;
+import com.cz.core.context.RpcContext;
+import com.cz.core.util.LoadBalanceUtil;
 import com.cz.core.util.MethodUtils;
 import com.cz.core.util.TypeUtils;
 
@@ -20,11 +20,14 @@ import java.util.*;
  */
 public class ProxyByJdk implements InvocationHandler {
     Class<?> service;
-
+    RpcContext context;
+    List<String> providerUrls;
     RpcConnect rpcConnect = new OkHttpConnectImpl();
 
-    public ProxyByJdk(Class<?> service) {
+    public ProxyByJdk(Class<?> service, RpcContext rpcContext, List<String> providerUrls) {
         this.service = service;
+        this.context = rpcContext;
+        this.providerUrls = providerUrls;
     }
 
     /**
@@ -32,12 +35,23 @@ public class ProxyByJdk implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
+        // 封装 RPC 请求信息
         if (MethodUtils.isLocalMethod(method.getName())) {
             return null;
         }
         String methodSign = MethodUtils.methodSign(method);
         RpcRequest request = new RpcRequest(service, method.getName(), methodSign, args, method.getParameterTypes());
-        RpcResponse rpcResponse = rpcConnect.connect(request);
+
+        // 负载均衡处理
+        Router router = context.getRouter();
+        LoadBalancer loadBalancer = context.getLoadBalancer();
+        String chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
+        System.out.println("load balance choose is ---------> " + chosenProvider);
+
+        // 发起实际请求
+        RpcResponse rpcResponse = rpcConnect.connect(request, chosenProvider);
+
+        // 返回值处理
         if (rpcResponse == null) {
             return new RuntimeException(
                     String.format("Invoke class [%s] method [%s(%s)] error, params:[%S]",

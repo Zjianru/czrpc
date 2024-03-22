@@ -60,15 +60,20 @@ public class ProviderBootstrap implements ApplicationContextAware {
         Object[] args = request.getArgs();
         // issue #1
 //        Method method = findMethod(bean.getClass(), request.getMethod(), argsType);
-        Object[] realArgs = new Object[argsType.length];
-        for (int i = 0; i < argsType.length; i++) {
-            Object realArg = JSON.to(argsType[i], args[i]);
-            realArgs[i] = realArg;
-        }
         RpcResponse response = new RpcResponse();
         try {
             ProviderMeta meta = findProviderMeta(methodSign, providerMetas);
             Method method = meta.getMethod();
+            if (argsType == null) {
+                argsType = method.getParameterTypes();
+            }
+            Object[] realArgs = new Object[argsType.length];
+            for (int i = 0; i < argsType.length; i++) {
+                Object realArg = JSON.to(argsType[i], args[i]);
+                realArgs[i] = realArg;
+            }
+
+
             Object result = method.invoke(meta.getTargetService(), realArgs);
             response.setStatus(true);
             response.setData(result);

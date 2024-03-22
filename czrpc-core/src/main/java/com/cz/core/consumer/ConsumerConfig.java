@@ -1,5 +1,8 @@
 package com.cz.core.consumer;
 
+import com.cz.core.cluster.RoundRobinLoadBalancer;
+import com.cz.core.connect.LoadBalancer;
+import com.cz.core.connect.Router;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,4 +28,15 @@ public class ConsumerConfig {
         return args -> consumerBootstrap.start();
     }
 
+    @Bean
+    public LoadBalancer loadBalancer() {
+//        return LoadBalancer.Default;
+//        return new RandomLoadBalancer();
+        return new RoundRobinLoadBalancer();
+    }
+
+    @Bean
+    public Router router() {
+        return Router.Default;
+    }
 }

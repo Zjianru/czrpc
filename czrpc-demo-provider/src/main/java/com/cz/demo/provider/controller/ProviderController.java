@@ -28,8 +28,19 @@ public class ProviderController {
      * @param request 指定的接口方法和参数
      * @return 接口返回值
      */
-    @RequestMapping("/")
+    @RequestMapping("/endPoint1")
     public RpcResponse invoke(@RequestBody RpcRequest request) {
+        return providerBootstrap.invoke(request);
+    }
+
+    /**
+     * http+json 实现序列化和通信
+     *
+     * @param request 指定的接口方法和参数
+     * @return 接口返回值
+     */
+    @RequestMapping("/endPoint2")
+    public RpcResponse invoke2(@RequestBody RpcRequest request) {
         return providerBootstrap.invoke(request);
     }
 }
