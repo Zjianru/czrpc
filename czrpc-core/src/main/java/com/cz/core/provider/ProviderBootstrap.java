@@ -5,9 +5,12 @@ import com.cz.core.annotation.czProvider;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
 import com.cz.core.meta.ProviderMeta;
+import com.cz.core.register.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +30,34 @@ import java.util.Map;
 @Data
 public class ProviderBootstrap implements ApplicationContextAware {
 
+    /**
+     * 容器上下文
+     */
     ApplicationContext applicationContext;
+
+    /**
+     * 注册中心信息
+     */
+    private RegistryCenter registryCenter;
+
+    /**
+     * 提供者实例信息
+     */
+    private String instance;
+
+    /**
+     * 端口信息
+     */
+    @Value("${server.port}")
+    private String port;
+
     /**
      * 服务提供者注册表 存储接口中方法级别的元数据
      * key: service interface
      * value: 接口中的所有自定义方法
      */
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
+
     // issue #1
 //    private Map<String, Object> skeleton = new HashMap<>();
 
@@ -42,9 +67,25 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * 装配目前的 provider 信息
      */
     @PostConstruct
-    public void start() {
+    @SneakyThrows
+    public void init() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
+        registryCenter = applicationContext.getBean(RegistryCenter.class);
         providers.values().forEach(this::getInterface);
+
+        String hostAddress = InetAddress.getLocalHost().getHostAddress();
+        instance = hostAddress + "_" + port;
+        registryCenter.start();
+        skeleton.keySet().forEach(this::registerService);
+    }
+
+    /**
+     * 向注册中心注册服务与实例
+     *
+     * @param serviceInfo 服务信息
+     */
+    private void registerService(String serviceInfo) {
+        registryCenter.register(serviceInfo, instance);
     }
 
     /**

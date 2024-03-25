@@ -29,6 +29,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 .namespace("czrpc")
                 .retryPolicy(retryPolicy)
                 .build();
+        client.start();
     }
 
     /**
