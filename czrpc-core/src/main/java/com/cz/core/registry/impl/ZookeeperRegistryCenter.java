@@ -7,7 +7,7 @@ import lombok.SneakyThrows;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.cache.CuratorCache;
+import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 
@@ -131,8 +131,13 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     @Override
     @SneakyThrows
     public void subscribe(String service, ChangedListener listener) {
-        CuratorCache cache = CuratorCache.build(client, "/" + service);
-        cache.listenable().addListener((type, childData, childData1) -> {
+        final TreeCache cache = TreeCache.newBuilder(client, "/" + service)
+                .setCacheData(true)
+                .setMaxDepth(2)
+                .build();
+        cache.getListenable().addListener((curator, event) -> {
+            // 有任何节点变动 就会执行
+            System.out.println("zk subscribe event:" + event);
             List<String> nodes = fetchAll(service);
             listener.fire(new Event(nodes));
         });

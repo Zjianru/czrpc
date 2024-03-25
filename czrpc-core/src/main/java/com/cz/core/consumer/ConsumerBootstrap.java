@@ -93,10 +93,6 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
             providerUrls.clear();
             providerUrls.addAll(transRegistryDataToHttp(event.getData()));
         });
-
-        System.out.println("after subscribe....");
-        providerUrls.forEach(System.out::println);
-
         return ConsumerProxyFactory.createByJDK(service, rpcContext, providerUrls);
     }
 
