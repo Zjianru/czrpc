@@ -25,11 +25,12 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         // 链接 zookeeper
         client = CuratorFrameworkFactory.builder()
-                .connectString("localhost:2181")
+                .connectString("127.0.0.1:2181")
                 .namespace("czrpc")
                 .retryPolicy(retryPolicy)
                 .build();
         client.start();
+        System.out.println("zookeeper registry center start success!%n");
     }
 
     /**
@@ -38,6 +39,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     @Override
     public void stop() {
         client.close();
+        System.out.println("zookeeper registry center stop success!%n");
     }
 
     /**
@@ -59,6 +61,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
             // 创建实例节点路径
+            System.out.println("zookeeper registry center register success!%n CREATE PATH -->" + instancePath + "%n");
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,6 +88,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 return;
             }
             // 删除实例节点
+            System.out.println("zookeeper registry center unregister success!%n DELETE PATH -->" + instancePath + "%n");
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
             e.printStackTrace();

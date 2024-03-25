@@ -8,6 +8,7 @@ import com.cz.core.meta.ProviderMeta;
 import com.cz.core.register.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,16 +68,40 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * 装配目前的 provider 信息
      */
     @PostConstruct
-    @SneakyThrows
     public void init() {
         Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
         registryCenter = applicationContext.getBean(RegistryCenter.class);
         providers.values().forEach(this::getInterface);
+    }
 
+    /**
+     * 服务下线
+     */
+    @PreDestroy
+    public void stop() {
+        skeleton.keySet().forEach(this::unRegisterService);
+    }
+
+    /**
+     * 注册服务到 zookeeper
+     */
+    @SneakyThrows
+    public void start() {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
         instance = hostAddress + "_" + port;
-        registryCenter.start();
         skeleton.keySet().forEach(this::registerService);
+        registryCenter.start();
+    }
+
+
+    /**
+     * 服务与实例下线
+     *
+     * @param serviceInfo 服务信息
+     */
+    private void unRegisterService(String serviceInfo) {
+        registryCenter.unRegister(serviceInfo, instance);
+
     }
 
     /**
