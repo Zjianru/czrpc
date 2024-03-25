@@ -1,6 +1,6 @@
-package com.cz.core.register;
+package com.cz.core.registry;
 
-import com.cz.core.register.listener.ChangedListener;
+import com.cz.core.registry.listener.ChangedListener;
 
 import java.util.List;
 

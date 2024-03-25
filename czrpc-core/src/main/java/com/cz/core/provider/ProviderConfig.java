@@ -1,7 +1,7 @@
 package com.cz.core.provider;
 
-import com.cz.core.register.RegistryCenter;
-import com.cz.core.register.impl.ZookeeperRegistryCenter;
+import com.cz.core.registry.RegistryCenter;
+import com.cz.core.registry.impl.ZookeeperRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package com.cz.core.register;
+package com.cz.core.registry;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

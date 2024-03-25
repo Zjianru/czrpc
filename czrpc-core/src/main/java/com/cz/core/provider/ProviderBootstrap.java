@@ -5,7 +5,7 @@ import com.cz.core.annotation.czProvider;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
 import com.cz.core.meta.ProviderMeta;
-import com.cz.core.register.RegistryCenter;
+import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -90,6 +90,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
         instance = hostAddress + "_" + port;
         skeleton.keySet().forEach(this::registerService);
+        registryCenter = applicationContext.getBean(RegistryCenter.class);
         registryCenter.start();
     }
 
@@ -100,6 +101,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param serviceInfo 服务信息
      */
     private void unRegisterService(String serviceInfo) {
+        registryCenter = applicationContext.getBean(RegistryCenter.class);
         registryCenter.unRegister(serviceInfo, instance);
 
     }
@@ -110,6 +112,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param serviceInfo 服务信息
      */
     private void registerService(String serviceInfo) {
+        registryCenter = applicationContext.getBean(RegistryCenter.class);
         registryCenter.register(serviceInfo, instance);
     }
 

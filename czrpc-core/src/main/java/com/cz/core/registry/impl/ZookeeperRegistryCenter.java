@@ -1,12 +1,13 @@
-package com.cz.core.register.impl;
+package com.cz.core.registry.impl;
 
-import com.cz.core.register.Event;
-import com.cz.core.register.RegistryCenter;
-import com.cz.core.register.listener.ChangedListener;
+import com.cz.core.registry.Event;
+import com.cz.core.registry.RegistryCenter;
+import com.cz.core.registry.listener.ChangedListener;
+import lombok.SneakyThrows;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.curator.framework.recipes.cache.CuratorCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 
@@ -33,8 +34,8 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 .namespace("czrpc")
                 .retryPolicy(retryPolicy)
                 .build();
+        System.out.println("zookeeper registry center start success!");
         client.start();
-        System.out.println("zookeeper registry center start success!%n");
     }
 
     /**
@@ -42,8 +43,8 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      */
     @Override
     public void stop() {
+        System.out.println("zookeeper registry center stop success!");
         client.close();
-        System.out.println("zookeeper registry center stop success!%n");
     }
 
     /**
@@ -65,10 +66,9 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
             // 创建实例节点路径
-            System.out.println("zookeeper registry center register success!%n CREATE PATH -->" + instancePath + "%n");
+            System.out.println("zookeeper registry center register success! CREATE PATH -->" + instancePath);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -93,10 +93,9 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 return;
             }
             // 删除实例节点
-            System.out.println("zookeeper registry center unregister success!%n DELETE PATH -->" + instancePath + "%n");
+            System.out.println("zookeeper registry center unregister success! DELETE PATH -->" + instancePath);
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -114,11 +113,10 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
         try {
             // 获取所有子节点
             List<String> nodes = client.getChildren().forPath(servicePath);
-            System.out.println("zookeeper fetchAll success!%n service path -->" + servicePath);
+            System.out.println("zookeeper fetchAll success! service path -->" + servicePath);
             nodes.forEach(System.out::println);
             return nodes;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -131,16 +129,13 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @param listener listener
      */
     @Override
+    @SneakyThrows
     public void subscribe(String service, ChangedListener listener) {
-        final TreeCache cache = TreeCache.newBuilder(client, "/" + service)
-                .setCacheData(true)
-                .setMaxDepth(2)
-                .build();
-        cache.getListenable().addListener(listener, event -> {
-            // 有任何节点变动 就会执行
-            System.out.println("zk subscribe event:" + event);
+        CuratorCache cache = CuratorCache.build(client, "/" + service);
+        cache.listenable().addListener((type, childData, childData1) -> {
             List<String> nodes = fetchAll(service);
             listener.fire(new Event(nodes));
         });
+        cache.start();
     }
 }
