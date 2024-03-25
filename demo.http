@@ -1,5 +1,5 @@
 ### 测试获取用户信息 -8081
-POST http://localhost:8081/endPoint1
+POST http://192.168.31.151:8081/
 Content-Type: application/json
 
 {

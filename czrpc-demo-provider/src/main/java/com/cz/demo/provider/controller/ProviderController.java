@@ -28,7 +28,7 @@ public class ProviderController {
      * @param request 指定的接口方法和参数
      * @return 接口返回值
      */
-    @RequestMapping("/endPoint1")
+    @RequestMapping("/")
     public RpcResponse invoke(@RequestBody RpcRequest request) {
         return providerBootstrap.invoke(request);
     }

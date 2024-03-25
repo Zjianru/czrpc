@@ -1,15 +1,19 @@
-package com.cz.core.register;
+package com.cz.core.register.impl;
 
+import com.cz.core.register.Event;
+import com.cz.core.register.RegistryCenter;
+import com.cz.core.register.listener.ChangedListener;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 
 import java.util.List;
 
 /**
- * code desc
+ * zookeeper 注册中心实现
  *
  * @author Zjianru
  */
@@ -17,7 +21,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     private CuratorFramework client;
 
     /**
-     *
+     * 启动注册中心客户端
      */
     @Override
     public void start() {
@@ -34,7 +38,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     }
 
     /**
-     *
+     * 停止注册中心客户端
      */
     @Override
     public void stop() {
@@ -65,6 +69,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -92,23 +97,50 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
     /**
-     * @param service
-     * @return
+     * 获取全部消费者信息
+     *
+     * @param service service info
+     * @return provide instance info in service
      */
     @Override
     public List<String> fetchAll(String service) {
-        return null;
+        // 服务节点路径
+        String servicePath = "/" + service;
+        try {
+            // 获取所有子节点
+            List<String> nodes = client.getChildren().forPath(servicePath);
+            System.out.println("zookeeper fetchAll success!%n service path -->" + servicePath);
+            nodes.forEach(System.out::println);
+            return nodes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     /**
-     * @param service
+     * 消费端订阅
+     * 感知注册中心数据变化
+     *
+     * @param service  service info
+     * @param listener listener
      */
     @Override
-    public void subscribe(String service) {
-
+    public void subscribe(String service, ChangedListener listener) {
+        final TreeCache cache = TreeCache.newBuilder(client, "/" + service)
+                .setCacheData(true)
+                .setMaxDepth(2)
+                .build();
+        cache.getListenable().addListener(listener, event -> {
+            // 有任何节点变动 就会执行
+            System.out.println("zk subscribe event:" + event);
+            List<String> nodes = fetchAll(service);
+            listener.fire(new Event(nodes));
+        });
     }
 }

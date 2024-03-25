@@ -84,8 +84,17 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      */
     private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
         String serviceName = service.getCanonicalName();
-        List<String> providerUrls = registryCenter.fetchAll(serviceName);
+        List<String> providerUrls = transRegistryDataToHttp(registryCenter.fetchAll(serviceName));
+        registryCenter.subscribe(serviceName, event -> {
+            providerUrls.clear();
+            providerUrls.addAll(transRegistryDataToHttp(event.getData()));
+        });
         return ConsumerProxyFactory.createByJDK(service, rpcContext, providerUrls);
+    }
+
+    private List<String> transRegistryDataToHttp(List<String> nodes) {
+        return new ArrayList<>(nodes.stream()
+                .map(x -> "http://" + x.replace('_', ':')).toList());
     }
 
     /**

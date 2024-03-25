@@ -1,5 +1,7 @@
 package com.cz.core.register;
 
+import com.cz.core.register.listener.ChangedListener;
+
 import java.util.List;
 
 /**
@@ -20,7 +22,7 @@ public interface RegistryCenter {
     // consumer 侧
     List<String> fetchAll(String service);
 
-    void subscribe(String service);
+    void subscribe(String service, ChangedListener listener);
 
     class StaticRegistryCenter implements RegistryCenter {
         List<String> providers;
@@ -55,7 +57,7 @@ public interface RegistryCenter {
         }
 
         @Override
-        public void subscribe(String service) {
+        public void subscribe(String service, ChangedListener listener) {
             System.out.println("RegistryCenter subscribe");
         }
     }

@@ -4,14 +4,12 @@ import com.cz.core.cluster.RoundRobinLoadBalancer;
 import com.cz.core.connect.LoadBalancer;
 import com.cz.core.connect.Router;
 import com.cz.core.register.RegistryCenter;
+import com.cz.core.register.impl.ZookeeperRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-
-import java.util.List;
 
 /**
  * consumer 配置类
@@ -20,8 +18,6 @@ import java.util.List;
  */
 @Configuration
 public class ConsumerConfig {
-    @Value("${czRpc.providers}")
-    String providers;
 
     @Bean
     @Order(1)
@@ -29,26 +25,45 @@ public class ConsumerConfig {
         return new ConsumerBootstrap();
     }
 
+    /**
+     * 初始化消费端
+     *
+     * @param consumerBootstrap 消费端初始化逻辑
+     * @return ApplicationRunner
+     */
     @Bean
     @Order(Integer.MIN_VALUE)
     public ApplicationRunner consumerInit(@Autowired ConsumerBootstrap consumerBootstrap) {
         return args -> consumerBootstrap.start();
     }
 
+    /**
+     * 加载负载均衡策略
+     *
+     * @return 负载均衡实现
+     */
     @Bean
     public LoadBalancer loadBalancer() {
-//        return LoadBalancer.Default;
-//        return new RandomLoadBalancer();
         return new RoundRobinLoadBalancer();
     }
 
+    /**
+     * 加载路由策略
+     *
+     * @return 路由实现
+     */
     @Bean
     public Router router() {
         return Router.Default;
     }
 
+    /**
+     * 加载消费端注册中心逻辑
+     *
+     * @return 注册中心实现
+     */
     @Bean(initMethod = "start", destroyMethod = "stop")
     public RegistryCenter consumerRegistryCenter() {
-        return new RegistryCenter.StaticRegistryCenter(List.of(providers.split(",")));
+        return new ZookeeperRegistryCenter();
     }
 }
