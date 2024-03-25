@@ -42,6 +42,7 @@ public class TypeUtils {
                 if (componentType.isPrimitive() || componentType.getPackageName().startsWith("java")) {
                     Array.set(resultArray, i, Array.get(origin, i));
                 } else {
+                    // 额外处理已定义的包装对象 例如 User[]
                     Object castObject = cast(Array.get(origin, i), componentType);
                     Array.set(resultArray, i, castObject);
                 }
@@ -71,7 +72,7 @@ public class TypeUtils {
         } else if (type.equals(Short.class) || type.equals(Short.TYPE)) {
             return Short.valueOf(origin.toString());
         } else if (type.equals(Character.class) || type.equals(Character.TYPE)) {
-            return Character.valueOf(origin.toString().charAt(0));
+            return origin.toString().charAt(0);
         } else if (type.equals(Boolean.class) || type.equals(Boolean.TYPE)) {
             return Boolean.valueOf(origin.toString());
         }
