@@ -1,7 +1,12 @@
 package com.cz.core.util;
 
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MethodUtils {
     public MethodUtils() {
@@ -48,5 +53,26 @@ public class MethodUtils {
         );
         return sb.toString();
     }
+
+    /**
+     * 查找被注解的字段
+     *
+     * @param clazz 类
+     * @return List<Field>
+     */
+    public static List<Field> findAnnotatedField(Class<?> clazz,
+                                                 Class<? extends Annotation> annotationClass) {
+        // 取到的是被代理增强的子类
+        List<Field> result = new ArrayList<>();
+        while (clazz != null) {
+            List<Field> fieldInCurrentClass = Arrays.stream(clazz.getDeclaredFields())
+                    .filter(field -> field.isAnnotationPresent(annotationClass))
+                    .toList();
+            result.addAll(fieldInCurrentClass);
+            clazz = clazz.getSuperclass();
+        }
+        return result;
+    }
+
 
 }

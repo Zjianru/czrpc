@@ -97,8 +97,6 @@ public class TypeUtils {
                 if (genericReturnType instanceof ParameterizedType parameterizedType) {
                     Class<?> keyType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
                     Class<?> valueType = (Class<?>) parameterizedType.getActualTypeArguments()[1];
-                    System.out.println("keyType  : " + keyType);
-                    System.out.println("valueType: " + valueType);
                     jsonResult.entrySet().stream().forEach(
                             e -> {
                                 Object key = cast(e.getKey(), keyType);

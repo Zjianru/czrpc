@@ -6,6 +6,7 @@ import com.cz.core.connect.Router;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
 import com.cz.core.registry.RegistryCenter;
+import com.cz.core.util.MethodUtils;
 import lombok.Data;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -14,7 +15,10 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * consumer 启动并完成注册
@@ -55,7 +59,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {
             Object bean = applicationContext.getBean(name);
-            List<Field> fields = findAnnotatedField(bean.getClass());
+            List<Field> fields = MethodUtils.findAnnotatedField(bean.getClass(), czConsumer.class);
             fields.forEach(field -> {
                 try {
                     Class<?> service = field.getType();
@@ -85,10 +89,6 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
         String serviceName = service.getCanonicalName();
         List<String> providerUrls = transRegistryDataToHttp(registryCenter.fetchAll(serviceName));
-
-        System.out.println("before subscribe....");
-        providerUrls.forEach(System.out::println);
-
         registryCenter.subscribe(serviceName, event -> {
             providerUrls.clear();
             providerUrls.addAll(transRegistryDataToHttp(event.getData()));
@@ -100,25 +100,5 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         return nodes.stream()
                 .map(x -> "http://" + x.replace('_', ':')).toList();
     }
-
-    /**
-     * 查找被注解的字段
-     *
-     * @param clazz 类
-     * @return List<Field>
-     */
-    private List<Field> findAnnotatedField(Class<?> clazz) {
-        // 取到的是被代理增强的子类
-        List<Field> result = new ArrayList<>();
-        while (clazz != null) {
-            List<Field> fieldInCurrentClass = Arrays.stream(clazz.getDeclaredFields())
-                    .filter(field -> field.isAnnotationPresent(czConsumer.class))
-                    .toList();
-            result.addAll(fieldInCurrentClass);
-            clazz = clazz.getSuperclass();
-        }
-        return result;
-    }
-
 
 }
