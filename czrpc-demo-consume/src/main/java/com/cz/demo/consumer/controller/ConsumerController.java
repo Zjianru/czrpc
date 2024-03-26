@@ -4,6 +4,7 @@ import com.cz.core.annotation.CzConsumer;
 import com.cz.demo.api.pojo.User;
 import com.cz.demo.api.service.UserService;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -17,7 +18,7 @@ public class ConsumerController {
     UserService userService;
 
     @RequestMapping("/findById")
-    public User findById(int id) {
+    public User findById(@RequestParam("id") int id) {
         return userService.findById(id);
     }
 }

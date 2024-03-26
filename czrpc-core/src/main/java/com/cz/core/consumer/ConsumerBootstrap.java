@@ -3,8 +3,9 @@ package com.cz.core.consumer;
 import com.cz.core.annotation.CzConsumer;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
-import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.filter.Filter;
+import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.RegistryCenter;
@@ -20,6 +21,8 @@ import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Field;
 import java.util.*;
+
+import static com.cz.core.filter.Filter.DefaultFilter;
 
 /**
  * consumer 启动并完成注册
@@ -81,11 +84,14 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         // 获取负载均衡信息
         Router<InstanceMeta> router = applicationContext.getBean(Router.class);
         LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
+
         RpcContext rpcContext = RpcContext.builder()
-                .filters(new ArrayList<>())
+                .filters(Collections.singletonList(DefaultFilter))
                 .loadBalancer(loadBalancer)
                 .router(router)
                 .build();
+        processFilter(rpcContext, null);
+
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
         // 获取提供者服务信息
         String[] names = applicationContext.getBeanDefinitionNames();
@@ -104,10 +110,30 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                             }
                             field.setAccessible(true);
                             field.set(bean, consumer);
-                        } catch (IllegalAccessException e) {
+                        } catch (IllegalAccessException ignored) {
                         }
                     });
                 });
+    }
+
+    /**
+     * 处理过滤器链
+     *
+     * @param rpcContext rpc 上下文
+     * @param filter     指定的 filter 策略
+     */
+    private void processFilter(RpcContext rpcContext, Filter filter) {
+        List<Filter> filters = applicationContext.getBeansOfType(Filter.class).values().stream().toList();
+//        if (rpcContext.getFilters().isEmpty()) {
+//            filters = new ArrayList<>();
+//        } else {
+//            filters = rpcContext.getFilters();
+//        }
+//        if (filter == null) {
+//            filter = DefaultFilter;
+//        }
+//        filters.add(filter);
+        rpcContext.setFilters(filters);
     }
 
     /**

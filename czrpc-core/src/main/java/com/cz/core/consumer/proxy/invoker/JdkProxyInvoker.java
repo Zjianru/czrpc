@@ -3,14 +3,16 @@ package com.cz.core.consumer.proxy.invoker;
 import com.cz.core.connect.RpcConnect;
 import com.cz.core.connect.invoker.OkHttpInvoker;
 import com.cz.core.context.RpcContext;
-import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.filter.Filter;
+import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
 import com.cz.core.util.LoadBalanceUtil;
 import com.cz.core.util.MethodUtils;
 import com.cz.core.util.TypeUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -22,6 +24,7 @@ import java.util.List;
  *
  * @author Zjianru
  */
+@Slf4j
 public class JdkProxyInvoker implements InvocationHandler {
     /**
      * 服务接口
@@ -66,13 +69,44 @@ public class JdkProxyInvoker implements InvocationHandler {
         }
         String methodSign = MethodUtils.methodSign(method);
         RpcRequest request = new RpcRequest(service, method.getName(), methodSign, args, method.getParameterTypes());
+
+        List<Filter> filters = context.getFilters();
+
+        // 前置过滤器处理
+        // TODO cacheFilter 得放在所有后置 filter 的最后一个，不然有可能缓存的是上一次中间阶段的 rpcResponse
+        for (Filter filter : filters) {
+            RpcResponse filterResponse = filter.perProcess(request);
+            if (filterResponse != null) {
+                log.debug(filter.getClass().getName() + "==>perProcess return: " + filterResponse.getData());
+                return responseCastToResult(method, args, filterResponse);
+            }
+        }
+
         // 负载均衡处理
         Router<InstanceMeta> router = context.getRouter();
         LoadBalancer<InstanceMeta> loadBalancer = context.getLoadBalancer();
         InstanceMeta chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
         // 发起实际请求
         RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider.transferToUrl());
+
+        // 后置过滤器处理
+        for (Filter filter : filters) {
+            rpcResponse = filter.postProcess(request, rpcResponse);
+            log.info(filter.getClass().getName() + "==>postProcess return: " + rpcResponse.getData());
+        }
         // 返回值处理
+        return responseCastToResult(method, args, rpcResponse);
+    }
+
+    /**
+     * 返回值处理
+     *
+     * @param method      method
+     * @param args        args
+     * @param rpcResponse rpcResponse
+     * @return Object
+     */
+    private Object responseCastToResult(Method method, Object[] args, RpcResponse<?> rpcResponse) {
         if (rpcResponse == null) {
             return new RuntimeException(
                     String.format("Invoke class [%s] method [%s(%s)] error, params:[%S]",
@@ -82,9 +116,10 @@ public class JdkProxyInvoker implements InvocationHandler {
         if (rpcResponse.isStatus()) {
             Object data = rpcResponse.getData();
             return TypeUtils.castMethodResult(method, data);
+        } else {
+            // 服务端异常信息传播到客户端
+            Exception exception = rpcResponse.getException();
+            throw new RuntimeException(exception);
         }
-        // 服务端异常信息传播到客户端
-        Exception exception = rpcResponse.getException();
-        throw new RuntimeException(exception);
     }
 }

@@ -1,7 +1,7 @@
 package com.cz.core.util;
 
-import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import lombok.extern.slf4j.Slf4j;
 

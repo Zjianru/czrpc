@@ -14,5 +14,4 @@ czrpc:
 logging:
   level:
     root: info
-#    com.cz.demo: debug
-#    com.cz.core: debug
+    com.cz: info

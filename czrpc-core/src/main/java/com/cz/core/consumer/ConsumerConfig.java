@@ -1,8 +1,10 @@
 package com.cz.core.consumer;
 
-import com.cz.core.cluster.RoundRobinLoadBalancer;
-import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.filter.Filter;
+import com.cz.core.filter.policy.CacheFilter;
+import com.cz.core.loadBalance.LoadBalancer;
+import com.cz.core.loadBalance.policy.RoundRobinLoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.registry.impl.ZookeeperRegistryCenter;
@@ -67,4 +69,15 @@ public class ConsumerConfig {
     public RegistryCenter consumerRegistryCenter() {
         return new ZookeeperRegistryCenter();
     }
+
+    /**
+     * 加载过滤器
+     *
+     * @return 过滤器实现
+     */
+    @Bean
+    public Filter filter() {
+        return new CacheFilter();
+    }
+
 }

@@ -1,6 +1,6 @@
-package com.cz.core.cluster;
+package com.cz.core.loadBalance.policy;
 
-import com.cz.core.enhance.LoadBalancer;
+import com.cz.core.loadBalance.LoadBalancer;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
