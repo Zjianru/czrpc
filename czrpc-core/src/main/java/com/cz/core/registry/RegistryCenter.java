@@ -5,7 +5,7 @@ import com.cz.core.registry.listener.ChangedListener;
 import java.util.List;
 
 /**
- * code desc
+ * 注册中心
  *
  * @author Zjianru
  */
@@ -24,10 +24,13 @@ public interface RegistryCenter {
 
     void subscribe(String service, ChangedListener listener);
 
-    class StaticRegistryCenter implements RegistryCenter {
+    /**
+     * 静态的默认实现
+     */
+    class DefaultRegistryCenter implements RegistryCenter {
         List<String> providers;
 
-        public StaticRegistryCenter(List<String> providers) {
+        public DefaultRegistryCenter(List<String> providers) {
             this.providers = providers;
         }
 

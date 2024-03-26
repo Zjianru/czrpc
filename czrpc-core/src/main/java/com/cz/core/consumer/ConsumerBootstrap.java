@@ -1,10 +1,10 @@
 package com.cz.core.consumer;
 
 import com.cz.core.annotation.czConsumer;
-import com.cz.core.connect.LoadBalancer;
-import com.cz.core.connect.Router;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
+import com.cz.core.enhance.LoadBalancer;
+import com.cz.core.enhance.Router;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import lombok.Data;

@@ -8,9 +8,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 处理反射相关逻辑的工具类
+ */
 public class MethodUtils {
     public MethodUtils() {
     }
+
+    private static final String serviceSeparator = "@";
+    private static final String methodSeparator = "_";
+
 
     /**
      * 判断是否为本地方法
@@ -47,9 +54,9 @@ public class MethodUtils {
      */
     public static String methodSign(Method method) {
         StringBuilder sb = new StringBuilder(method.getName());
-        sb.append("@").append(method.getParameterCount());
+        sb.append(serviceSeparator).append(method.getParameterCount());
         Arrays.stream(method.getParameterTypes()).forEach(
-                c -> sb.append("_").append(c.getCanonicalName())
+                c -> sb.append(methodSeparator).append(c.getCanonicalName())
         );
         return sb.toString();
     }
@@ -73,6 +80,5 @@ public class MethodUtils {
         }
         return result;
     }
-
 
 }

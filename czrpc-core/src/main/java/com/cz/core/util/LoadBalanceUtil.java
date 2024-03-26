@@ -1,7 +1,7 @@
 package com.cz.core.util;
 
-import com.cz.core.connect.LoadBalancer;
-import com.cz.core.connect.Router;
+import com.cz.core.enhance.LoadBalancer;
+import com.cz.core.enhance.Router;
 
 import java.util.List;
 

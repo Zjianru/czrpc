@@ -1,25 +1,33 @@
-package com.cz.core.connect.impl;
+package com.cz.core.connect.invoker;
 
 import com.alibaba.fastjson2.JSON;
 import com.cz.core.connect.RpcConnect;
-import com.cz.core.connect.RpcRequest;
-import com.cz.core.connect.RpcResponse;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import com.cz.core.protocol.RpcRequest;
+import com.cz.core.protocol.RpcResponse;
+import okhttp3.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * code desc
+ * HTTP 请求目标服务
  *
  * @author Zjianru
  */
 @Service
-public class OkHttpConnectImpl implements RpcConnect {
+public class OkHttpInvoker implements RpcConnect {
+    private final OkHttpClient client;
+
+    MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
+
+    public OkHttpInvoker() {
+        client = new OkHttpClient.Builder()
+                .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
+                .readTimeout(1, TimeUnit.SECONDS)
+                .writeTimeout(1, TimeUnit.SECONDS)
+                .connectTimeout(1, TimeUnit.SECONDS).build();
+    }
 
     /**
      * connect provider and send meta data
@@ -29,19 +37,14 @@ public class OkHttpConnectImpl implements RpcConnect {
      * @return response
      */
     @Override
-    public RpcResponse connect(RpcRequest rpcRequest, String providerUrl) {
+    public RpcResponse<?> connect(RpcRequest rpcRequest, String providerUrl) {
         try {
-            OkHttpClient httpClient = new OkHttpClient.Builder()
-                    .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
-                    .readTimeout(1, TimeUnit.SECONDS)
-                    .writeTimeout(1, TimeUnit.SECONDS)
-                    .connectTimeout(1, TimeUnit.SECONDS).build();
             String requestJson = JSON.toJSONString(rpcRequest);
             Request request = new Request.Builder()
                     .url(providerUrl)
                     .post(RequestBody.create(requestJson, JSON_TYPE))
                     .build();
-            String response = Objects.requireNonNull(httpClient.newCall(request).execute().body()).string();
+            String response = Objects.requireNonNull(client.newCall(request).execute().body()).string();
             return JSON.parseObject(response, RpcResponse.class);
         } catch (Exception e) {
             throw new RuntimeException(e);

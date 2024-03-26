@@ -1,6 +1,6 @@
 package com.cz.core.consumer.proxy;
 
-import com.cz.core.consumer.proxy.impl.ProxyByJdk;
+import com.cz.core.consumer.proxy.invoker.JdkProxyInvoker;
 import com.cz.core.context.RpcContext;
 
 import java.lang.reflect.Proxy;
@@ -15,7 +15,7 @@ public class ConsumerProxyFactory {
     // TODO 扩展点 - 多方式动态代理实现
     public static Object createByJDK(Class<?> service, RpcContext rpcContext, List<String> providerUrls) {
         return Proxy.newProxyInstance(
-                service.getClassLoader(), new Class[]{service}, new ProxyByJdk(service, rpcContext, providerUrls)
+                service.getClassLoader(), new Class[]{service}, new JdkProxyInvoker(service, rpcContext, providerUrls)
         );
     }
 }

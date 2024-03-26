@@ -1,8 +1,8 @@
 package com.cz.core.consumer;
 
 import com.cz.core.cluster.RoundRobinLoadBalancer;
-import com.cz.core.connect.LoadBalancer;
-import com.cz.core.connect.Router;
+import com.cz.core.enhance.LoadBalancer;
+import com.cz.core.enhance.Router;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.registry.impl.ZookeeperRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;

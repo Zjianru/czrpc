@@ -1,6 +1,7 @@
 package com.cz.core.connect;
 
-import okhttp3.MediaType;
+import com.cz.core.protocol.RpcRequest;
+import com.cz.core.protocol.RpcResponse;
 
 /**
  * 扩展接口 - rpc 连接方式
@@ -9,7 +10,6 @@ import okhttp3.MediaType;
  */
 public interface RpcConnect {
 
-    MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
 
     /**
      * okHttp / netty / httpclient / jdk urlConnection
@@ -19,5 +19,5 @@ public interface RpcConnect {
      * @param providerUrl 负载均衡后得到的提供者请求路径
      * @return response
      */
-    RpcResponse connect(RpcRequest rpcRequest, String providerUrl);
+    RpcResponse<?> connect(RpcRequest rpcRequest, String providerUrl);
 }

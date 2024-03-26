@@ -1,7 +1,7 @@
 package com.cz.demo.provider.controller;
 
-import com.cz.core.connect.RpcRequest;
-import com.cz.core.connect.RpcResponse;
+import com.cz.core.protocol.RpcRequest;
+import com.cz.core.protocol.RpcResponse;
 import com.cz.core.provider.ProviderBootstrap;
 import com.cz.core.provider.ProviderInvoker;
 import org.springframework.beans.factory.annotation.Autowired;

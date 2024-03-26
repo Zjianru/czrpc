@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * code desc
+ * 注册中心事件
  *
  * @author Zjianru
  */

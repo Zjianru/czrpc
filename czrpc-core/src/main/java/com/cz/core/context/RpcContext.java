@@ -1,8 +1,8 @@
 package com.cz.core.context;
 
-import com.cz.core.connect.Filter;
-import com.cz.core.connect.LoadBalancer;
-import com.cz.core.connect.Router;
+import com.cz.core.enhance.Filter;
+import com.cz.core.enhance.LoadBalancer;
+import com.cz.core.enhance.Router;
 import lombok.Data;
 
 import java.util.List;

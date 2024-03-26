@@ -1,9 +1,9 @@
 package com.cz.core.provider;
 
 import com.alibaba.fastjson2.JSON;
-import com.cz.core.connect.RpcRequest;
-import com.cz.core.connect.RpcResponse;
 import com.cz.core.meta.ProviderMeta;
+import com.cz.core.protocol.RpcRequest;
+import com.cz.core.protocol.RpcResponse;
 import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * code desc
+ * 实现具体 RPC 调用
  *
  * @author Zjianru
  */
@@ -51,8 +51,6 @@ public class ProviderInvoker {
                 Object realArg = JSON.to(argsType[i], args[i]);
                 realArgs[i] = realArg;
             }
-
-
             Object result = method.invoke(meta.getTargetService(), realArgs);
             response.setStatus(true);
             response.setData(result);
