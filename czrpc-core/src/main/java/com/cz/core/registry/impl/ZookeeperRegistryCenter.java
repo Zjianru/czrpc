@@ -20,6 +20,7 @@ import java.util.List;
  */
 public class ZookeeperRegistryCenter implements RegistryCenter {
     private CuratorFramework client;
+    private TreeCache cache;
 
     /**
      * 启动注册中心客户端
@@ -44,6 +45,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     @Override
     public void stop() {
         System.out.println("zookeeper registry center stop success!");
+        cache.close();
         client.close();
     }
 
@@ -131,7 +133,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     @Override
     @SneakyThrows
     public void subscribe(String service, ChangedListener listener) {
-        final TreeCache cache = TreeCache.newBuilder(client, "/" + service)
+        cache = TreeCache.newBuilder(client, "/" + service)
                 .setCacheData(true)
                 .setMaxDepth(2)
                 .build();
