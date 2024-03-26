@@ -1,5 +1,6 @@
 package com.cz.core.registry.impl;
 
+import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.Event;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.registry.listener.ChangedListener;
@@ -12,6 +13,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * zookeeper 注册中心实现
@@ -57,11 +59,11 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @param instance 实例 - 临时节点
      */
     @Override
-    public void register(String service, String instance) {
+    public void register(String service, InstanceMeta instance) {
         // 服务节点路径
         String servicePath = "/" + service;
         // 实例节点路径
-        String instancePath = servicePath + "/" + instance;
+        String instancePath = servicePath + "/" + instance.toPath();
         try {
             if (client.checkExists().forPath(servicePath) == null) {
                 // 没找到服务节点路径，创建持久化节点
@@ -83,11 +85,11 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @param instance 实例 - 临时节点
      */
     @Override
-    public void unRegister(String service, String instance) {
+    public void unRegister(String service, InstanceMeta instance) {
         // 服务节点路径
         String servicePath = "/" + service;
         // 实例节点路径
-        String instancePath = servicePath + "/" + instance;
+        String instancePath = servicePath + "/" + instance.toPath();
         try {
             // 检查服务节点路径
             if (client.checkExists().forPath(servicePath) == null) {
@@ -109,7 +111,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @return provide instance info in service
      */
     @Override
-    public List<String> fetchAll(String service) {
+    public List<InstanceMeta> fetchAll(String service) {
         // 服务节点路径
         String servicePath = "/" + service;
         try {
@@ -117,10 +119,17 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             List<String> nodes = client.getChildren().forPath(servicePath);
             System.out.println("zookeeper fetchAll success! service path -->" + servicePath);
             nodes.forEach(System.out::println);
-            return nodes;
+            return mapInstance(nodes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<InstanceMeta> mapInstance(List<String> nodes) {
+        return nodes.stream().map(x -> {
+            String[] split = x.split("_");
+            return InstanceMeta.http(split[0], Integer.parseInt(split[1]));
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -140,8 +149,8 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
         cache.getListenable().addListener((curator, event) -> {
             // 有任何节点变动 就会执行
             System.out.println("zk subscribe event:" + event);
-            List<String> nodes = fetchAll(service);
-            listener.fire(new Event(nodes));
+            List<InstanceMeta> metas = fetchAll(service);
+            listener.fire(new Event(metas));
         });
         cache.start();
     }

@@ -1,6 +1,7 @@
 package com.cz.core.provider;
 
 import com.cz.core.annotation.czProvider;
+import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
@@ -39,7 +40,8 @@ public class ProviderBootstrap implements ApplicationContextAware {
     /**
      * 提供者实例信息
      */
-    private String instance;
+    private InstanceMeta instance;
+
 
     /**
      * 端口信息
@@ -79,7 +81,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @SneakyThrows
     public void start() {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
-        instance = hostAddress + "_" + port;
+        instance = InstanceMeta.http(hostAddress, Integer.valueOf(port));
         // 先启动客户端 后注册服务
         registryCenter.start();
         skeleton.keySet().forEach(this::registerService);

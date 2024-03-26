@@ -1,5 +1,6 @@
 package com.cz.core.registry;
 
+import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.listener.ChangedListener;
 
 import java.util.List;
@@ -15,12 +16,12 @@ public interface RegistryCenter {
     void stop();
 
     // provider 侧
-    void register(String service, String instance);
+    void register(String service, InstanceMeta instance);
 
-    void unRegister(String service, String instance);
+    void unRegister(String service, InstanceMeta instance);
 
     // consumer 侧
-    List<String> fetchAll(String service);
+    List<InstanceMeta> fetchAll(String service);
 
     void subscribe(String service, ChangedListener listener);
 
@@ -28,9 +29,9 @@ public interface RegistryCenter {
      * 静态的默认实现
      */
     class DefaultRegistryCenter implements RegistryCenter {
-        List<String> providers;
+        List<InstanceMeta> providers;
 
-        public DefaultRegistryCenter(List<String> providers) {
+        public DefaultRegistryCenter(List<InstanceMeta> providers) {
             this.providers = providers;
         }
 
@@ -44,17 +45,17 @@ public interface RegistryCenter {
         }
 
         @Override
-        public void register(String service, String instance) {
+        public void register(String service, InstanceMeta instance) {
             System.out.println("RegistryCenter register");
         }
 
         @Override
-        public void unRegister(String service, String instance) {
+        public void unRegister(String service, InstanceMeta instance) {
             System.out.println("RegistryCenter unRegister");
         }
 
         @Override
-        public List<String> fetchAll(String service) {
+        public List<InstanceMeta> fetchAll(String service) {
             System.out.println("RegistryCenter fetchAll");
             return providers;
         }

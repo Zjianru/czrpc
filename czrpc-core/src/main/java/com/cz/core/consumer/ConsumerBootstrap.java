@@ -5,6 +5,7 @@ import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import lombok.Data;
@@ -88,17 +89,11 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      */
     private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
         String serviceName = service.getCanonicalName();
-        List<String> providerUrls = transRegistryDataToHttp(registryCenter.fetchAll(serviceName));
+        List<InstanceMeta> providerUrls = registryCenter.fetchAll(serviceName);
         registryCenter.subscribe(serviceName, event -> {
             providerUrls.clear();
-            providerUrls.addAll(transRegistryDataToHttp(event.getData()));
+            providerUrls.addAll(event.getData());
         });
         return ConsumerProxyFactory.createByJDK(service, rpcContext, providerUrls);
     }
-
-    private List<String> transRegistryDataToHttp(List<String> nodes) {
-        return nodes.stream()
-                .map(x -> "http://" + x.replace('_', ':')).toList();
-    }
-
 }

@@ -5,6 +5,7 @@ import com.cz.core.connect.invoker.OkHttpInvoker;
 import com.cz.core.context.RpcContext;
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.meta.InstanceMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
 import com.cz.core.util.LoadBalanceUtil;
@@ -24,10 +25,10 @@ import java.util.List;
 public class JdkProxyInvoker implements InvocationHandler {
     Class<?> service;
     RpcContext context;
-    List<String> providerUrls;
+    List<InstanceMeta> providerUrls;
     RpcConnect rpcConnect = new OkHttpInvoker();
 
-    public JdkProxyInvoker(Class<?> service, RpcContext rpcContext, List<String> providerUrls) {
+    public JdkProxyInvoker(Class<?> service, RpcContext rpcContext, List<InstanceMeta> providerUrls) {
         this.service = service;
         this.context = rpcContext;
         this.providerUrls = providerUrls;
@@ -51,11 +52,11 @@ public class JdkProxyInvoker implements InvocationHandler {
         String methodSign = MethodUtils.methodSign(method);
         RpcRequest request = new RpcRequest(service, method.getName(), methodSign, args, method.getParameterTypes());
         // 负载均衡处理
-        Router router = context.getRouter();
-        LoadBalancer loadBalancer = context.getLoadBalancer();
-        String chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
+        Router<InstanceMeta> router = context.getRouter();
+        LoadBalancer<InstanceMeta> loadBalancer = context.getLoadBalancer();
+        InstanceMeta chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
         // 发起实际请求
-        RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider);
+        RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider.transferToUrl());
         // 返回值处理
         if (rpcResponse == null) {
             return new RuntimeException(

@@ -2,6 +2,7 @@ package com.cz.core.util;
 
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.meta.InstanceMeta;
 
 import java.util.List;
 
@@ -20,9 +21,9 @@ public class LoadBalanceUtil {
      * @param providers    待选举的请求者信息
      * @return 被选中的提供者的请求地址
      */
-    public static String chooseProvider(Router router, LoadBalancer loadBalancer, List<String> providers) {
-        List<String> route = router.selectRoute(providers);
-        String choose = (String) loadBalancer.choose(route);
+    public static InstanceMeta chooseProvider(Router<InstanceMeta> router, LoadBalancer<InstanceMeta> loadBalancer, List<InstanceMeta> providers) {
+        List<InstanceMeta> route = router.selectRoute(providers);
+        InstanceMeta choose = loadBalancer.choose(route);
         System.out.println("finally load balance choose is ===> " + choose);
         return choose;
     }
