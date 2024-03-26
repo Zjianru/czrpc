@@ -18,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -121,7 +122,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
                 .build();
         // 先注销实例 后销毁客户端
         registryCenter.unRegister(serviceMeta, instance);
-        registryCenter.stop();
     }
 
     /**
@@ -146,14 +146,11 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param bean tagged serviceMeta
      */
     private void getInterface(Object bean) {
-        Class<?> anInterface = bean.getClass().getInterfaces()[0];
-        Method[] methods = anInterface.getMethods();
-        for (Method method : methods) {
-            if (MethodUtils.isLocalMethod(method)) {
-                continue;
-            }
-            createProvider(anInterface, bean, method);
-        }
+        Arrays.stream(bean.getClass().getInterfaces()).forEach(service -> {
+            Arrays.stream(service.getMethods())
+                    .filter(method -> !MethodUtils.isLocalMethod(method))
+                    .forEach(method -> createProvider(service, bean, method));
+        });
     }
 
 

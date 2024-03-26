@@ -19,10 +19,7 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * consumer 启动并完成注册
@@ -92,25 +89,26 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
         // 获取提供者服务信息
         String[] names = applicationContext.getBeanDefinitionNames();
-        for (String name : names) {
-            Object bean = applicationContext.getBean(name);
-            List<Field> fields = MethodUtils.findAnnotatedField(bean.getClass(), czConsumer.class);
-            fields.forEach(field -> {
-                try {
-                    Class<?> service = field.getType();
-                    String serviceName = service.getCanonicalName();
-                    Object consumer = stub.get(serviceName);
-                    if (consumer == null) {
-                        consumer = createFromRegistry(service, rpcContext, registryCenter);
-                        stub.put(serviceName, consumer);
-                    }
-                    field.setAccessible(true);
-                    field.set(bean, consumer);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
+        Arrays.stream(names)
+                .map(name -> applicationContext.getBean(name))
+                .forEach(bean -> {
+                    List<Field> fields = MethodUtils.findAnnotatedField(bean.getClass(), czConsumer.class);
+                    fields.forEach(field -> {
+                        try {
+                            Class<?> service = field.getType();
+                            String serviceName = service.getCanonicalName();
+                            Object consumer = stub.get(serviceName);
+                            if (consumer == null) {
+                                consumer = createFromRegistry(service, rpcContext, registryCenter);
+                                stub.put(serviceName, consumer);
+                            }
+                            field.setAccessible(true);
+                            field.set(bean, consumer);
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                });
     }
 
     /**

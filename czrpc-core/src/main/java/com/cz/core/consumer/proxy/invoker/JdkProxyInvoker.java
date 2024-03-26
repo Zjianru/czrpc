@@ -23,9 +23,24 @@ import java.util.List;
  * @author Zjianru
  */
 public class JdkProxyInvoker implements InvocationHandler {
+    /**
+     * 服务接口
+     */
     Class<?> service;
+
+    /**
+     * rpc 上下文
+     */
     RpcContext context;
+
+    /**
+     * 服务提供者信息
+     */
     List<InstanceMeta> providerUrls;
+
+    /**
+     * RPC 连接器
+     */
     RpcConnect rpcConnect = new OkHttpInvoker();
 
     public JdkProxyInvoker(Class<?> service, RpcContext rpcContext, List<InstanceMeta> providerUrls) {

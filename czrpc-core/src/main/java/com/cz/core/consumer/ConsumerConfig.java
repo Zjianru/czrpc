@@ -3,6 +3,7 @@ package com.cz.core.consumer;
 import com.cz.core.cluster.RoundRobinLoadBalancer;
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
+import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.registry.impl.ZookeeperRegistryCenter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +44,8 @@ public class ConsumerConfig {
      * @return 负载均衡实现
      */
     @Bean
-    public LoadBalancer loadBalancer() {
-        return new RoundRobinLoadBalancer();
+    public LoadBalancer<InstanceMeta> loadBalancer() {
+        return new RoundRobinLoadBalancer<>();
     }
 
     /**
@@ -53,7 +54,7 @@ public class ConsumerConfig {
      * @return 路由实现
      */
     @Bean
-    public Router router() {
+    public Router<InstanceMeta> router() {
         return Router.Default;
     }
 
