@@ -3,6 +3,7 @@ package com.cz.demo.provider.controller;
 import com.cz.core.connect.RpcRequest;
 import com.cz.core.connect.RpcResponse;
 import com.cz.core.provider.ProviderBootstrap;
+import com.cz.core.provider.ProviderInvoker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProviderController {
 
     @Autowired
-    ProviderBootstrap providerBootstrap;
+    ProviderInvoker providerInvoker;
 
     /**
      * http+json 实现序列化和通信
@@ -29,8 +30,8 @@ public class ProviderController {
      * @return 接口返回值
      */
     @RequestMapping("/")
-    public RpcResponse invoke(@RequestBody RpcRequest request) {
-        return providerBootstrap.invoke(request);
+    public RpcResponse<Object> invoke(@RequestBody RpcRequest request) {
+        return providerInvoker.invoke(request);
     }
 
     /**
@@ -40,7 +41,7 @@ public class ProviderController {
      * @return 接口返回值
      */
     @RequestMapping("/endPoint2")
-    public RpcResponse invoke2(@RequestBody RpcRequest request) {
-        return providerBootstrap.invoke(request);
+    public RpcResponse<Object> invoke2(@RequestBody RpcRequest request) {
+        return providerInvoker.invoke(request);
     }
 }

@@ -24,7 +24,7 @@ public class OkHttpConnectImpl implements RpcConnect {
     /**
      * connect provider and send meta data
      *
-     * @param rpcRequest request info
+     * @param rpcRequest  request info
      * @param providerUrl 负载均衡后得到的提供者请求路径
      * @return response
      */
@@ -42,8 +42,7 @@ public class OkHttpConnectImpl implements RpcConnect {
                     .post(RequestBody.create(requestJson, JSON_TYPE))
                     .build();
             String response = Objects.requireNonNull(httpClient.newCall(request).execute().body()).string();
-            RpcResponse rpcResponse = JSON.parseObject(response, RpcResponse.class);
-            return rpcResponse;
+            return JSON.parseObject(response, RpcResponse.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

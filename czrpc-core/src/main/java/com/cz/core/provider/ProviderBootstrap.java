@@ -1,9 +1,6 @@
 package com.cz.core.provider;
 
-import com.alibaba.fastjson2.JSON;
 import com.cz.core.annotation.czProvider;
-import com.cz.core.connect.RpcRequest;
-import com.cz.core.connect.RpcResponse;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
@@ -17,10 +14,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,10 +53,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * value: 接口中的所有自定义方法
      */
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
-
-    // issue #1
-//    private Map<String, Object> skeleton = new HashMap<>();
-
 
     /**
      * 启动时完成 provider 注册
@@ -115,62 +106,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
         registryCenter.register(serviceInfo, instance);
     }
 
-    /**
-     * 完成 RPC 调用
-     *
-     * @param request RPC 请求信息
-     * @return RPC 返回数据
-     */
-    public RpcResponse invoke(RpcRequest request) {
-        String methodSign = request.getMethodSign();
-        List<ProviderMeta> providerMetas = skeleton.get(request.getService().getCanonicalName());
-        Class<?>[] argsType = request.getArgsType();
-        Object[] args = request.getArgs();
-        // issue #1
-//        Method method = findMethod(bean.getClass(), request.getMethod(), argsType);
-        RpcResponse response = new RpcResponse();
-        try {
-            ProviderMeta meta = findProviderMeta(methodSign, providerMetas);
-            Method method = meta.getMethod();
-            if (argsType == null) {
-                argsType = method.getParameterTypes();
-            }
-            Object[] realArgs = new Object[argsType.length];
-            for (int i = 0; i < argsType.length; i++) {
-                Object realArg = JSON.to(argsType[i], args[i]);
-                realArgs[i] = realArg;
-            }
-
-
-            Object result = method.invoke(meta.getTargetService(), realArgs);
-            response.setStatus(true);
-            response.setData(result);
-        } catch (InvocationTargetException e) {
-            e.getTargetException().printStackTrace();
-            response.setStatus(false);
-            // 传播异常信息
-            response.setException(new RuntimeException(e.getTargetException().getMessage()));
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-            response.setStatus(false);
-            response.setException(new RuntimeException(e.getMessage()));
-        }
-        return response;
-    }
-
-    /**
-     * 查找元数据
-     *
-     * @param methodSign    方法签名
-     * @param providerMetas skeleton 桩子中的元数据链（记录信息为 method 级别）
-     * @return ProviderMeta
-     */
-    private ProviderMeta findProviderMeta(String methodSign, List<ProviderMeta> providerMetas) {
-        return providerMetas.stream()
-                .filter(meta -> meta.getMethodSign().equals(methodSign))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("no such method"));
-    }
 
     /**
      * 获取接口信息
@@ -186,13 +121,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
             }
             createProvider(anInterface, bean, method);
         }
-//        skeleton.put(anInterface.getCanonicalName(), bean);
-        // 打印 skeleton 当前的注册信息
-        System.out.println("current skeleton size is -->" + skeleton.size());
-        for (String s : skeleton.keySet()) {
-            System.out.println("skeleton key = " + s + " value = " + skeleton.get(s));
-        }
-
     }
 
 
@@ -211,19 +139,4 @@ public class ProviderBootstrap implements ApplicationContextAware {
         skeleton.add(anInterface.getCanonicalName(), providerMeta);
     }
 
-    /**
-     * 根据参数类型查找方法
-     *
-     * @param aClass     service
-     * @param methodName 方法名
-     * @param argsType   参数类型
-     * @return declare method
-     */
-    private Method findMethod(Class<?> aClass, String methodName, Class<?>[] argsType) {
-        try {
-            return aClass.getMethod(methodName, argsType);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

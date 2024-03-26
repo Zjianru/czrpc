@@ -49,7 +49,7 @@ public class ProxyByJdk implements InvocationHandler {
         System.out.println("load balance choose is ---------> " + chosenProvider);
 
         // 发起实际请求
-        RpcResponse rpcResponse = rpcConnect.connect(request, chosenProvider);
+        RpcResponse<Object> rpcResponse = rpcConnect.connect(request, chosenProvider);
 
         // 返回值处理
         if (rpcResponse == null) {
