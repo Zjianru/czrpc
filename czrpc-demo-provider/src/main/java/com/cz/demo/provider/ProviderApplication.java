@@ -1,8 +1,9 @@
 package com.cz.demo.provider;
 
+import com.cz.core.provider.ProviderConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 
 /**
  * provider application
@@ -10,7 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
  * @author Zjianru
  */
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.cz.demo.provider", "com.cz.core.provider"})
+@Import({ProviderConfig.class})
 public class ProviderApplication {
     public static void main(String[] args) {
         SpringApplication.run(ProviderApplication.class, args);

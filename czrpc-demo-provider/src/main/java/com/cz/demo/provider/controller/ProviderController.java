@@ -2,10 +2,8 @@ package com.cz.demo.provider.controller;
 
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
-import com.cz.core.provider.ProviderBootstrap;
 import com.cz.core.provider.ProviderInvoker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Zjianru
  */
 @RestController
-@Import(ProviderBootstrap.class)
 public class ProviderController {
 
     @Autowired

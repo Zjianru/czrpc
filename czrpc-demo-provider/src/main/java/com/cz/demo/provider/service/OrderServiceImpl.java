@@ -1,6 +1,6 @@
 package com.cz.demo.provider.service;
 
-import com.cz.core.annotation.czProvider;
+import com.cz.core.annotation.CzProvider;
 import com.cz.demo.api.pojo.Order;
 import com.cz.demo.api.service.OrderService;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
  * @author Zjianru
  */
 @Service
-@czProvider
+@CzProvider
 public class OrderServiceImpl implements OrderService {
     /**
      * find order

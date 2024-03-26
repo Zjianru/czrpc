@@ -1,6 +1,6 @@
 package com.cz.core.provider;
 
-import com.cz.core.annotation.czProvider;
+import com.cz.core.annotation.CzProvider;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.meta.ServiceMeta;
@@ -83,7 +83,7 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @PostConstruct
     public void init() {
         registryCenter = applicationContext.getBean(RegistryCenter.class);
-        Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
+        Map<String, Object> providers = applicationContext.getBeansWithAnnotation(CzProvider.class);
         providers.values().forEach(this::getInterface);
     }
 

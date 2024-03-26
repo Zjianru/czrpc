@@ -1,6 +1,6 @@
 package com.cz.demo.provider;
 
-import com.cz.core.annotation.czProvider;
+import com.cz.core.annotation.CzProvider;
 import com.cz.demo.api.pojo.User;
 import com.cz.demo.api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import java.util.Map;
  * @author Zjianru
  */
 @Service
-@czProvider
+@CzProvider
 public class UserServiceImpl implements UserService {
 
     @Autowired

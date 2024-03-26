@@ -1,6 +1,6 @@
 package com.cz.core.consumer;
 
-import com.cz.core.annotation.czConsumer;
+import com.cz.core.annotation.CzConsumer;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
 import com.cz.core.enhance.LoadBalancer;
@@ -92,7 +92,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         Arrays.stream(names)
                 .map(name -> applicationContext.getBean(name))
                 .forEach(bean -> {
-                    List<Field> fields = MethodUtils.findAnnotatedField(bean.getClass(), czConsumer.class);
+                    List<Field> fields = MethodUtils.findAnnotatedField(bean.getClass(), CzConsumer.class);
                     fields.forEach(field -> {
                         try {
                             Class<?> service = field.getType();
