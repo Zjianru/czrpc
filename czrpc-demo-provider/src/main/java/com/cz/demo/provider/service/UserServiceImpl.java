@@ -72,6 +72,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User[] findUsers(User[] users) {
+        return users;
+    }
+
+    @Override
     public List<User> getList(List<User> userList) {
         return userList;
     }
@@ -81,4 +86,19 @@ public class UserServiceImpl implements UserService {
         return userMap;
     }
 
+    @Override
+    public Boolean getFlag(boolean flag) {
+        return !flag;
+    }
+
+    @Override
+    public User findById(long id) {
+        return new User(Long.valueOf(id).intValue(), "KK");
+    }
+
+    @Override
+    public User ex(boolean flag) {
+        if (flag) throw new RuntimeException("just throw an exception");
+        return new User(100, "KK100");
+    }
 }
