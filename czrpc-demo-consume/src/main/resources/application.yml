@@ -2,6 +2,9 @@ server:
   port: 8088
 spring:
   application:
-    name: czrpc-demo-consume
-czRpc:
-  providers: http://localhost:8081/endPoint1,http://localhost:8082/endPoint1,http://localhost:8083/endPoint1
+    name: czrpc-demo-consumer
+czrpc:
+  id: czrpc-demo
+  namespace: public
+  env: dev
+  rpc-version: 1.0.0

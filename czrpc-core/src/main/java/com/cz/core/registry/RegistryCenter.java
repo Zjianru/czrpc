@@ -1,6 +1,7 @@
 package com.cz.core.registry;
 
 import com.cz.core.meta.InstanceMeta;
+import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.listener.ChangedListener;
 
 import java.util.List;
@@ -16,14 +17,14 @@ public interface RegistryCenter {
     void stop();
 
     // provider 侧
-    void register(String service, InstanceMeta instance);
+    void register(ServiceMeta service, InstanceMeta instance);
 
-    void unRegister(String service, InstanceMeta instance);
+    void unRegister(ServiceMeta service, InstanceMeta instance);
 
     // consumer 侧
-    List<InstanceMeta> fetchAll(String service);
+    List<InstanceMeta> fetchAll(ServiceMeta service);
 
-    void subscribe(String service, ChangedListener listener);
+    void subscribe(ServiceMeta service, ChangedListener listener);
 
     /**
      * 静态的默认实现
@@ -45,23 +46,23 @@ public interface RegistryCenter {
         }
 
         @Override
-        public void register(String service, InstanceMeta instance) {
+        public void register(ServiceMeta service, InstanceMeta instance) {
             System.out.println("RegistryCenter register");
         }
 
         @Override
-        public void unRegister(String service, InstanceMeta instance) {
+        public void unRegister(ServiceMeta service, InstanceMeta instance) {
             System.out.println("RegistryCenter unRegister");
         }
 
         @Override
-        public List<InstanceMeta> fetchAll(String service) {
+        public List<InstanceMeta> fetchAll(ServiceMeta service) {
             System.out.println("RegistryCenter fetchAll");
             return providers;
         }
 
         @Override
-        public void subscribe(String service, ChangedListener listener) {
+        public void subscribe(ServiceMeta service, ChangedListener listener) {
             System.out.println("RegistryCenter subscribe");
         }
     }

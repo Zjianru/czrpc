@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.Map;
 
 /**
- * 注册中心使用的服务实例对象
+ * 服务实例元信息
  *
  * @author Zjianru
  */

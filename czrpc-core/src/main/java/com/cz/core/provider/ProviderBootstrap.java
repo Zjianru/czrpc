@@ -3,6 +3,7 @@ package com.cz.core.provider;
 import com.cz.core.annotation.czProvider;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ProviderMeta;
+import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import jakarta.annotation.PostConstruct;
@@ -50,8 +51,26 @@ public class ProviderBootstrap implements ApplicationContextAware {
     private String port;
 
     /**
+     * 应用标识
+     */
+    @Value("${czrpc.id}")
+    private String applicationId;
+
+    /**
+     * 命名空间
+     */
+    @Value("${czrpc.namespace}")
+    private String nameSpace;
+
+    /**
+     * 环境信息
+     */
+    @Value("${czrpc.env}")
+    private String env;
+
+    /**
      * 服务提供者注册表 存储接口中方法级别的元数据
-     * key: service interface
+     * key: serviceMeta interface
      * value: 接口中的所有自定义方法
      */
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
@@ -94,8 +113,14 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param serviceInfo 服务信息
      */
     private void unRegisterService(String serviceInfo) {
+        ServiceMeta serviceMeta = ServiceMeta.builder()
+                .serviceName(serviceInfo)
+                .applicationId(applicationId)
+                .env(env)
+                .nameSpace(nameSpace)
+                .build();
         // 先注销实例 后销毁客户端
-        registryCenter.unRegister(serviceInfo, instance);
+        registryCenter.unRegister(serviceMeta, instance);
         registryCenter.stop();
     }
 
@@ -105,14 +130,20 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param serviceInfo 服务信息
      */
     private void registerService(String serviceInfo) {
-        registryCenter.register(serviceInfo, instance);
+        ServiceMeta serviceMeta = ServiceMeta.builder()
+                .serviceName(serviceInfo)
+                .applicationId(applicationId)
+                .env(env)
+                .nameSpace(nameSpace)
+                .build();
+        registryCenter.register(serviceMeta, instance);
     }
 
 
     /**
      * 获取接口信息
      *
-     * @param bean tagged service
+     * @param bean tagged serviceMeta
      */
     private void getInterface(Object bean) {
         Class<?> anInterface = bean.getClass().getInterfaces()[0];
@@ -130,14 +161,15 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * 装配元信息
      *
      * @param anInterface key's resource
-     * @param bean        service bean
-     * @param method      service method
+     * @param bean        serviceMeta bean
+     * @param method      serviceMeta method
      */
     private void createProvider(Class<?> anInterface, Object bean, Method method) {
-        ProviderMeta providerMeta = new ProviderMeta();
-        providerMeta.setMethod(method);
-        providerMeta.setTargetService(bean);
-        providerMeta.setMethodSign(MethodUtils.methodSign(method));
+        ProviderMeta providerMeta = ProviderMeta.builder()
+                .method(method)
+                .targetService(bean)
+                .methodSign(MethodUtils.methodSign(method))
+                .build();
         skeleton.add(anInterface.getCanonicalName(), providerMeta);
     }
 

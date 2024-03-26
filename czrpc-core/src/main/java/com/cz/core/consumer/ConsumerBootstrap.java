@@ -6,10 +6,13 @@ import com.cz.core.context.RpcContext;
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
 import com.cz.core.meta.InstanceMeta;
+import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.util.MethodUtils;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
@@ -29,13 +32,47 @@ import java.util.Map;
 @Data
 public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAware {
 
+    /**
+     * 容器上下文
+     */
     ApplicationContext applicationContext;
+
+    /**
+     * 容器环境信息
+     */
     Environment environment;
 
+    /**
+     * 端口信息
+     */
+    @Value("${server.port}")
+    private String port;
+
+    /**
+     * 应用标识
+     */
+    @Value("${czrpc.id}")
+    private String applicationId;
+
+    /**
+     * 命名空间
+     */
+    @Value("${czrpc.namespace}")
+    private String nameSpace;
+
+    /**
+     * 环境信息
+     */
+    @Value("${czrpc.env}")
+    private String env;
+
+    /**
+     * 注册中心信息
+     */
     private Map<String, Object> stub = new HashMap<>();
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
@@ -45,17 +82,14 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      */
     public void start() {
         // 获取负载均衡信息
-        Router router = applicationContext.getBean(Router.class);
-        LoadBalancer loadBalancer = applicationContext.getBean(LoadBalancer.class);
-
-        RpcContext rpcContext = new RpcContext();
-        rpcContext.setRouter(router);
-        rpcContext.setLoadBalancer(loadBalancer);
-        // TODO 添加 filter 链
-        rpcContext.setFilters(new ArrayList<>());
-
+        Router<InstanceMeta> router = applicationContext.getBean(Router.class);
+        LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
+        RpcContext rpcContext = RpcContext.builder()
+                .filters(new ArrayList<>())
+                .loadBalancer(loadBalancer)
+                .router(router)
+                .build();
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
-
         // 获取提供者服务信息
         String[] names = applicationContext.getBeanDefinitionNames();
         for (String name : names) {
@@ -88,9 +122,14 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      * @return Object
      */
     private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
-        String serviceName = service.getCanonicalName();
-        List<InstanceMeta> providerUrls = registryCenter.fetchAll(serviceName);
-        registryCenter.subscribe(serviceName, event -> {
+        ServiceMeta serviceMeta = ServiceMeta.builder()
+                .serviceName(service.getCanonicalName())
+                .applicationId(applicationId)
+                .env(env)
+                .nameSpace(nameSpace)
+                .build();
+        List<InstanceMeta> providerUrls = registryCenter.fetchAll(serviceMeta);
+        registryCenter.subscribe(serviceMeta, event -> {
             providerUrls.clear();
             providerUrls.addAll(event.getData());
         });

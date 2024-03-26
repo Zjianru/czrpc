@@ -3,3 +3,8 @@ server:
 spring:
   application:
     name: czrpc-demo-provider
+czrpc:
+  id: czrpc-demo
+  namespace: public
+  env: dev
+  rpc-version: 1.0.0

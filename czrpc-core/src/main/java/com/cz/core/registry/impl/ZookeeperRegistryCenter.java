@@ -1,6 +1,7 @@
 package com.cz.core.registry.impl;
 
 import com.cz.core.meta.InstanceMeta;
+import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.Event;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.registry.listener.ChangedListener;
@@ -59,9 +60,9 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @param instance 实例 - 临时节点
      */
     @Override
-    public void register(String service, InstanceMeta instance) {
+    public void register(ServiceMeta service, InstanceMeta instance) {
         // 服务节点路径
-        String servicePath = "/" + service;
+        String servicePath = "/" + service.toPath();
         // 实例节点路径
         String instancePath = servicePath + "/" + instance.toPath();
         try {
@@ -85,9 +86,9 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @param instance 实例 - 临时节点
      */
     @Override
-    public void unRegister(String service, InstanceMeta instance) {
+    public void unRegister(ServiceMeta service, InstanceMeta instance) {
         // 服务节点路径
-        String servicePath = "/" + service;
+        String servicePath = "/" + service.toPath();
         // 实例节点路径
         String instancePath = servicePath + "/" + instance.toPath();
         try {
@@ -111,9 +112,9 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      * @return provide instance info in service
      */
     @Override
-    public List<InstanceMeta> fetchAll(String service) {
+    public List<InstanceMeta> fetchAll(ServiceMeta service) {
         // 服务节点路径
-        String servicePath = "/" + service;
+        String servicePath = "/" + service.toPath();
         try {
             // 获取所有子节点
             List<String> nodes = client.getChildren().forPath(servicePath);
@@ -141,8 +142,8 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      */
     @Override
     @SneakyThrows
-    public void subscribe(String service, ChangedListener listener) {
-        cache = TreeCache.newBuilder(client, "/" + service)
+    public void subscribe(ServiceMeta service, ChangedListener listener) {
+        cache = TreeCache.newBuilder(client, "/" + service.toPath())
                 .setCacheData(true)
                 .setMaxDepth(2)
                 .build();

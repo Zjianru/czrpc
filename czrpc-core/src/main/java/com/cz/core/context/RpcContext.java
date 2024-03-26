@@ -4,6 +4,7 @@ import com.cz.core.enhance.Filter;
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
 import com.cz.core.meta.InstanceMeta;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
  * @author Zjianru
  */
 @Data
+@Builder
 public class RpcContext {
     Router<InstanceMeta> router;
     LoadBalancer<InstanceMeta> loadBalancer;
