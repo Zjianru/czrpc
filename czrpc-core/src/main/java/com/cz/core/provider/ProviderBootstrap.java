@@ -69,8 +69,8 @@ public class ProviderBootstrap implements ApplicationContextAware {
      */
     @PostConstruct
     public void init() {
-        Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
         registryCenter = applicationContext.getBean(RegistryCenter.class);
+        Map<String, Object> providers = applicationContext.getBeansWithAnnotation(czProvider.class);
         providers.values().forEach(this::getInterface);
     }
 
@@ -89,9 +89,9 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public void start() {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
         instance = hostAddress + "_" + port;
-        skeleton.keySet().forEach(this::registerService);
-        registryCenter = applicationContext.getBean(RegistryCenter.class);
+        // 先启动客户端 后注册服务
         registryCenter.start();
+        skeleton.keySet().forEach(this::registerService);
     }
 
 
@@ -101,9 +101,9 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param serviceInfo 服务信息
      */
     private void unRegisterService(String serviceInfo) {
-        registryCenter = applicationContext.getBean(RegistryCenter.class);
+        // 先注销实例 后销毁客户端
         registryCenter.unRegister(serviceInfo, instance);
-
+        registryCenter.stop();
     }
 
     /**
@@ -112,7 +112,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
      * @param serviceInfo 服务信息
      */
     private void registerService(String serviceInfo) {
-        registryCenter = applicationContext.getBean(RegistryCenter.class);
         registryCenter.register(serviceInfo, instance);
     }
 

@@ -93,7 +93,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 return;
             }
             // 删除实例节点
-            System.out.println("zookeeper registry center unregister success! DELETE PATH -->" + instancePath);
+            System.out.println("zookeeper unRegistry center unregister success! DELETE PATH -->" + instancePath);
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -27,7 +27,7 @@ public class ProviderConfig {
     }
 
 
-    @Bean(initMethod = "start", destroyMethod = "stop")
+    @Bean
     RegistryCenter providerRegistryCenter() {
         return new ZookeeperRegistryCenter();
     }
