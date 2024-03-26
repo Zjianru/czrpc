@@ -1,5 +1,6 @@
 package com.cz.core.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
@@ -22,6 +23,7 @@ import java.util.function.Predicate;
  *
  * @author Zjianru
  */
+@Slf4j
 public class ScanPackagesUtils {
 
     static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
@@ -36,7 +38,7 @@ public class ScanPackagesUtils {
             }
             String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
                     ClassUtils.convertClassNameToResourcePath(SystemPropertyUtils.resolvePlaceholders(basePackage)) + "/" + DEFAULT_RESOURCE_PATTERN;
-            System.out.println("包扫描中，待扫描路径==>" + packageSearchPath);
+            log.debug("包扫描中，待扫描路径==>" + packageSearchPath);
             try {
                 Resource[] resources = resourcePatternResolver.getResources(packageSearchPath);
                 for (Resource resource : resources) {
@@ -49,7 +51,6 @@ public class ScanPackagesUtils {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
             }
         }
         return results;
@@ -57,15 +58,12 @@ public class ScanPackagesUtils {
 
     public static void main(String[] args) {
         String packages = "com.cz";
-
-        System.out.println(" 1. *********** ");
-        System.out.println(" => scan all classes for packages: " + packages);
+        log.debug(" 1. *********** ");
+        log.debug(" => scan all classes for packages: " + packages);
         List<Class<?>> classes = scanPackages(packages.split(","), p -> true);
         classes.forEach(System.out::println);
-
-        System.out.println();
-        System.out.println(" 2. *********** ");
-        System.out.println(" => scan all classes with @Configuration for packages: " + packages);
+        log.debug(" 2. *********** ");
+        log.debug(" => scan all classes with @Configuration for packages: " + packages);
         List<Class<?>> classesWithConfig = scanPackages(packages.split(","),
                 p -> Arrays.stream(p.getAnnotations())
                         .anyMatch(a -> a.annotationType().equals(Configuration.class)));

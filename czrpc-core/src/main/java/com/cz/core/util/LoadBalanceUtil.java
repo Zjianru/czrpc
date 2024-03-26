@@ -3,6 +3,7 @@ package com.cz.core.util;
 import com.cz.core.enhance.LoadBalancer;
 import com.cz.core.enhance.Router;
 import com.cz.core.meta.InstanceMeta;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  *
  * @author Zjianru
  */
+@Slf4j
 public class LoadBalanceUtil {
 
     /**
@@ -24,7 +26,7 @@ public class LoadBalanceUtil {
     public static InstanceMeta chooseProvider(Router<InstanceMeta> router, LoadBalancer<InstanceMeta> loadBalancer, List<InstanceMeta> providers) {
         List<InstanceMeta> route = router.selectRoute(providers);
         InstanceMeta choose = loadBalancer.choose(route);
-        System.out.println("finally load balance choose is ===> " + choose);
+        log.debug("finally load balance choose is ===> " + choose);
         return choose;
     }
 

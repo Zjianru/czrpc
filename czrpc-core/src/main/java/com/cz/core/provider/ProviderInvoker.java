@@ -60,7 +60,6 @@ public class ProviderInvoker {
             // 传播异常信息
             response.setException(new RuntimeException(e.getTargetException().getMessage()));
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
             response.setStatus(false);
             response.setException(new RuntimeException(e.getMessage()));
         }

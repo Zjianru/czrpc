@@ -37,33 +37,27 @@ public interface RegistryCenter {
         }
 
         public void start() {
-            System.out.println("RegistryCenter start");
         }
 
         @Override
         public void stop() {
-            System.out.println("RegistryCenter stop");
         }
 
         @Override
         public void register(ServiceMeta service, InstanceMeta instance) {
-            System.out.println("RegistryCenter register");
         }
 
         @Override
         public void unRegister(ServiceMeta service, InstanceMeta instance) {
-            System.out.println("RegistryCenter unRegister");
         }
 
         @Override
         public List<InstanceMeta> fetchAll(ServiceMeta service) {
-            System.out.println("RegistryCenter fetchAll");
             return providers;
         }
 
         @Override
         public void subscribe(ServiceMeta service, ChangedListener listener) {
-            System.out.println("RegistryCenter subscribe");
         }
     }
 }

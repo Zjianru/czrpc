@@ -11,3 +11,8 @@ czrpc:
   zkConfig:
     server: localhost:2181
     root: czrpc
+logging:
+  level:
+    root: info
+#    com.cz.demo: debug
+#    com.cz.core: debug
