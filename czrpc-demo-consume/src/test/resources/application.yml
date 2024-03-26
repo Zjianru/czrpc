@@ -1,16 +1,16 @@
 server:
-  port: 8081
+  port: 8089
 spring:
   application:
-    name: czrpc-demo-provider
+    name: czrpc-demo-test-consumer
 czrpc:
-  id: czrpc-demo
-  namespace: public
+  id: czrpc-demo-test
+  namespace: public-test
   env: dev
   rpcVersion: 1.0.0
   zkConfig:
     server: localhost:2181
-    root: czrpc
+    root: czrpcTest
 logging:
   level:
     root: error

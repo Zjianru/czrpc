@@ -11,9 +11,9 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.cz.demo.provider", "com.cz.core.provider"})
-public class CzrpcDemoProviderApplication {
+public class ProviderApplication {
     public static void main(String[] args) {
-        SpringApplication.run(CzrpcDemoProviderApplication.class, args);
+        SpringApplication.run(ProviderApplication.class, args);
     }
 
 }

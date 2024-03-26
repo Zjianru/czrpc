@@ -14,24 +14,28 @@
     <name>czrpc-demo-consume</name>
     <description>czrpc-demo-consume</description>
 
-    <properties>
-        <java.version>17</java.version>
-    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>${spring.boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -44,7 +48,26 @@
             <artifactId>czrpc-demo-api</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.cz</groupId>
+            <artifactId>czrpc-demo-api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cz</groupId>
+            <artifactId>czrpc-demo-provider</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
+
 
     <build>
         <plugins>
@@ -59,8 +82,28 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.3</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit-platform</artifactId>
+                        <version>3.2.3</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
+
 
 </project>

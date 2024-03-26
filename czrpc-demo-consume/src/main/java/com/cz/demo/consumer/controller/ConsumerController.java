@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * code desc
+ * consumer api endpoint
  *
  * @author Zjianru
  */
