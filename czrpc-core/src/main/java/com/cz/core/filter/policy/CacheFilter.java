@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Order
 public class CacheFilter implements Filter {
     // TODO 定义cache容量，和过期 替换为 Guava cache
-    Map<String, RpcResponse> cache = new ConcurrentHashMap<>();
+    Map<String, Object> cache = new ConcurrentHashMap<>();
 
     /**
      * 过滤器
@@ -25,7 +25,7 @@ public class CacheFilter implements Filter {
      * @return 过滤器处理结果
      */
     @Override
-    public RpcResponse perProcess(RpcRequest request) {
+    public Object perProcess(RpcRequest request) {
         return cache.get(request.toString());
     }
 
@@ -37,9 +37,9 @@ public class CacheFilter implements Filter {
      * @return 过滤器处理结果
      */
     @Override
-    public RpcResponse postProcess(RpcRequest request, RpcResponse response) {
-        cache.putIfAbsent(request.toString(), response);
-        return response;
+    public Object postProcess(RpcRequest request, RpcResponse response, Object result) {
+        cache.putIfAbsent(request.toString(), result);
+        return result;
     }
 
     /**

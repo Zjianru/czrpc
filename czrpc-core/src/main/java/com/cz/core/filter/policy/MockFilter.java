@@ -30,7 +30,7 @@ public class MockFilter implements Filter {
      * @return 过滤器处理结果
      */
     @Override
-    public RpcResponse postProcess(RpcRequest request, RpcResponse response) {
+    public RpcResponse postProcess(RpcRequest request, RpcResponse response, Object result) {
         return null;
     }
 

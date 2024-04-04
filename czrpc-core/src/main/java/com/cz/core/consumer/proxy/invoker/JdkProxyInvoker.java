@@ -75,27 +75,29 @@ public class JdkProxyInvoker implements InvocationHandler {
         // 前置过滤器处理
         // TODO cacheFilter 得放在所有后置 filter 的最后一个，不然有可能缓存的是上一次中间阶段的 rpcResponse
         for (Filter filter : filters) {
-            RpcResponse filterResponse = filter.perProcess(request);
-            if (filterResponse != null) {
-                log.debug(filter.getClass().getName() + "==>perProcess return: " + filterResponse.getData());
-                return responseCastToResult(method, args, filterResponse);
+            Object perFilterResponse = filter.perProcess(request);
+            if (perFilterResponse != null) {
+                log.info(filter.getClass().getName() + "==>perProcess return: " + perFilterResponse);
+                return perFilterResponse;
             }
         }
-
         // 负载均衡处理
         Router<InstanceMeta> router = context.getRouter();
         LoadBalancer<InstanceMeta> loadBalancer = context.getLoadBalancer();
         InstanceMeta chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
         // 发起实际请求
         RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider.transferToUrl());
-
+        // 返回值处理
+        Object result = responseCastToResult(method, args, rpcResponse);
         // 后置过滤器处理
         for (Filter filter : filters) {
-            rpcResponse = filter.postProcess(request, rpcResponse);
-            log.info(filter.getClass().getName() + "==>postProcess return: " + rpcResponse.getData());
+            Object postFilterResponse = filter.postProcess(request, rpcResponse, result);
+            if (postFilterResponse != null) {
+                log.info(filter.getClass().getName() + "==>perProcess return: " + postFilterResponse);
+                return postFilterResponse;
+            }
         }
-        // 返回值处理
-        return responseCastToResult(method, args, rpcResponse);
+        return result;
     }
 
     /**

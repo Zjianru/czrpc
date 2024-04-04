@@ -17,7 +17,7 @@ public interface Filter {
      * @param request 请求
      * @return 过滤器处理结果
      */
-    RpcResponse perProcess(RpcRequest request);
+    Object perProcess(RpcRequest request);
 
     /**
      * 后置处理
@@ -26,7 +26,7 @@ public interface Filter {
      * @param response 响应
      * @return 过滤器处理结果
      */
-    RpcResponse postProcess(RpcRequest request, RpcResponse response);
+    Object postProcess(RpcRequest request, RpcResponse response, Object result);
 
     /**
      * 下一个过滤器
@@ -40,13 +40,13 @@ public interface Filter {
      */
     Filter DefaultFilter = new Filter() {
         @Override
-        public RpcResponse perProcess(RpcRequest request) {
+        public Object perProcess(RpcRequest request) {
             return null;
         }
 
         @Override
-        public RpcResponse postProcess(RpcRequest request, RpcResponse response) {
-            return response;
+        public Object postProcess(RpcRequest request, RpcResponse response, Object result) {
+            return null;
         }
 
         @Override

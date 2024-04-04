@@ -123,16 +123,15 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      * @param filter     指定的 filter 策略
      */
     private void processFilter(RpcContext rpcContext, Filter filter) {
-        List<Filter> filters = applicationContext.getBeansOfType(Filter.class).values().stream().toList();
-//        if (rpcContext.getFilters().isEmpty()) {
-//            filters = new ArrayList<>();
-//        } else {
-//            filters = rpcContext.getFilters();
-//        }
-//        if (filter == null) {
-//            filter = DefaultFilter;
-//        }
-//        filters.add(filter);
+        List<Filter> list = applicationContext.getBeansOfType(Filter.class).values().stream().toList();
+        if (list.isEmpty()) {
+            list = new ArrayList<>();
+        }
+        if (filter == null) {
+            filter = DefaultFilter;
+        }
+        List<Filter> filters = new ArrayList<>(list);
+        filters.add(filter);
         rpcContext.setFilters(filters);
     }
 
