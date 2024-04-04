@@ -67,9 +67,7 @@ public class JdkProxyInvoker implements InvocationHandler {
         if (MethodUtils.isLocalMethod(method)) {
             return null;
         }
-        String methodSign = MethodUtils.methodSign(method);
-        RpcRequest request = new RpcRequest(service, method.getName(), methodSign, args, method.getParameterTypes());
-
+        RpcRequest request = new RpcRequest(service, method, method.getName(), MethodUtils.methodSign(method), args, method.getParameterTypes());
         List<Filter> filters = context.getFilters();
 
         // 前置过滤器处理

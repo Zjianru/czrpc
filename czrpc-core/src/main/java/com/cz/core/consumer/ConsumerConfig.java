@@ -3,6 +3,7 @@ package com.cz.core.consumer;
 import com.cz.core.enhance.Router;
 import com.cz.core.filter.Filter;
 import com.cz.core.filter.policy.CacheFilter;
+import com.cz.core.filter.policy.MockFilter;
 import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.loadBalance.policy.RoundRobinLoadBalancer;
 import com.cz.core.meta.InstanceMeta;
@@ -71,13 +72,23 @@ public class ConsumerConfig {
     }
 
     /**
-     * 加载过滤器
+     * 加载缓存过滤器 - 与挡板互斥 选择其一注入
      *
      * @return 过滤器实现
      */
     @Bean
-    public Filter filter() {
+    public Filter cacheFilter() {
         return new CacheFilter();
+    }
+
+    /**
+     * 加载挡板过滤器 - 与缓存互斥 选择其一注入
+     *
+     * @return 过滤器实现
+     */
+    @Bean
+    public Filter mockFilter() {
+        return new MockFilter();
     }
 
 }
