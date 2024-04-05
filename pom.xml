@@ -23,8 +23,8 @@
     <modules>
         <module>czrpc-core</module>
         <module>czrpc-demo-api</module>
-        <!--        <module>czrpc-demo-provider</module>-->
-        <!--        <module>czrpc-demo-consume</module>-->
-        <!--        <module>rmi-rpc</module>-->
+        <module>czrpc-demo-provider</module>
+        <module>czrpc-demo-consume</module>
+        <!--                <module>rmi-rpc</module>-->
     </modules>
 </project>

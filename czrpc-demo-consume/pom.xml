@@ -30,12 +30,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring.boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -50,12 +48,6 @@
         </dependency>
         <dependency>
             <groupId>com.cz</groupId>
-            <artifactId>czrpc-demo-api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.cz</groupId>
             <artifactId>czrpc-demo-provider</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>test</scope>
@@ -67,7 +59,6 @@
             <optional>true</optional>
         </dependency>
     </dependencies>
-
 
     <build>
         <plugins>
@@ -104,6 +95,5 @@
             </plugin>
         </plugins>
     </build>
-
 
 </project>
