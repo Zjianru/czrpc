@@ -23,7 +23,7 @@ class ProviderApplicationTests {
     }
 
     @AfterAll
-    static void destory() {
+    static void destroy() {
         zkServer.stop();
     }
 
