@@ -15,6 +15,7 @@
 
     <properties>
         <spring.boot.version>3.2.3</spring.boot.version>
+        <lombok.version>1.18.30</lombok.version>
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -22,8 +23,8 @@
     <modules>
         <module>czrpc-core</module>
         <module>czrpc-demo-api</module>
-        <module>czrpc-demo-provider</module>
-        <module>czrpc-demo-consume</module>
-        <module>rmi-rpc</module>
+        <!--        <module>czrpc-demo-provider</module>-->
+        <!--        <module>czrpc-demo-consume</module>-->
+        <!--        <module>rmi-rpc</module>-->
     </modules>
 </project>
