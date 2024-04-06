@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * code desc
@@ -20,5 +21,5 @@ public class RpcContext {
     Router<InstanceMeta> router;
     LoadBalancer<InstanceMeta> loadBalancer;
     List<Filter> filters;
-
+    Map<String, String> params;
 }

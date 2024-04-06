@@ -114,12 +114,10 @@ public class JdkProxyInvoker implements InvocationHandler {
                     ));
         }
         if (rpcResponse.isStatus()) {
-            Object data = rpcResponse.getData();
-            return TypeUtils.castMethodResult(method, data);
+            return TypeUtils.castMethodResult(method, rpcResponse.getData());
         } else {
             // 服务端异常信息传播到客户端
-            Exception exception = rpcResponse.getException();
-            throw new RuntimeException(exception);
+            throw new RuntimeException(rpcResponse.getException());
         }
     }
 }
