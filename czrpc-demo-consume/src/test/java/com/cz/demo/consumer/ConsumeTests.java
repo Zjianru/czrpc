@@ -1,7 +1,6 @@
 package com.cz.demo.consumer;
 
 import com.cz.demo.provider.ProviderApplication;
-import com.cz.test.TestZkServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
