@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,16 +47,24 @@ public class JdkProxyInvoker implements InvocationHandler {
     /**
      * RPC 连接器
      */
-    RpcConnect rpcConnect = new OkHttpInvoker();
+    RpcConnect rpcConnect;
 
+    /**
+     * constructor
+     *
+     * @param service      service
+     * @param rpcContext   rpcContext
+     * @param providerUrls providerUrls
+     */
     public JdkProxyInvoker(Class<?> service, RpcContext rpcContext, List<InstanceMeta> providerUrls) {
         this.service = service;
         this.context = rpcContext;
         this.providerUrls = providerUrls;
+        int timeout = Integer.parseInt(context.getParams().getOrDefault("czrpc.params.invokeTimeout", "1000"));
+        rpcConnect = new OkHttpInvoker(timeout);
     }
 
     /**
-     * Processes a method invocation on a proxy instance and returns
      * 动态代理已拦截请求，封装 RPC 请求并完成通信
      *
      * @param proxy  the proxy instance that the method was invoked on
@@ -71,33 +80,46 @@ public class JdkProxyInvoker implements InvocationHandler {
         }
         RpcRequest request = new RpcRequest(service, method, method.getName(), MethodUtils.methodSign(method), args, method.getParameterTypes());
         List<Filter> filters = context.getFilters();
-
-        // 前置过滤器处理
-        // TODO cacheFilter 得放在所有后置 filter 的最后一个，不然有可能缓存的是上一次中间阶段的 rpcResponse
-        for (Filter filter : filters) {
-            Object perFilterResponse = filter.perProcess(request);
-            if (perFilterResponse != null) {
-                log.info(filter.getClass().getName() + "==>perProcess return: " + perFilterResponse);
-                return perFilterResponse;
+        int retries = context.getRetries();
+        while (retries-- > 0) {
+            log.info("Invoke class [{}] method [{}] params: [{}], retry times: [{}]",
+                    service, method.getName(), Arrays.toString(args), retries);
+            try {
+                // 前置过滤器处理
+                // TODO cacheFilter 得放在所有后置 filter 的最后一个，不然有可能缓存的是上一次中间阶段的 rpcResponse
+                for (Filter filter : filters) {
+                    Object perFilterResponse = filter.perProcess(request);
+                    if (perFilterResponse != null) {
+                        log.info(filter.getClass().getName() + "==>perProcess return: " + perFilterResponse);
+                        return perFilterResponse;
+                    }
+                }
+                // 负载均衡处理
+                Router<InstanceMeta> router = context.getRouter();
+                LoadBalancer<InstanceMeta> loadBalancer = context.getLoadBalancer();
+                InstanceMeta chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
+                // 发起实际请求
+                RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider.transferToUrl());
+                // 返回值处理
+                Object result = responseCastToResult(method, args, rpcResponse);
+                // 后置过滤器处理
+                for (Filter filter : filters) {
+                    Object postFilterResponse = filter.postProcess(request, rpcResponse, result);
+                    if (postFilterResponse != null) {
+                        log.info(filter.getClass().getName() + "==>perProcess return: " + postFilterResponse);
+                        return postFilterResponse;
+                    }
+                }
+                return result;
+            } catch (RpcException e) {
+                log.error("Invoke class [{}] method [{}] error, params:[{}], retry times: [{}]",
+                        service, method.getName(), Arrays.toString(args), retries);
+                if (!(e.getCause() instanceof SocketTimeoutException)) {
+                    throw e;
+                }
             }
         }
-        // 负载均衡处理
-        Router<InstanceMeta> router = context.getRouter();
-        LoadBalancer<InstanceMeta> loadBalancer = context.getLoadBalancer();
-        InstanceMeta chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
-        // 发起实际请求
-        RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider.transferToUrl());
-        // 返回值处理
-        Object result = responseCastToResult(method, args, rpcResponse);
-        // 后置过滤器处理
-        for (Filter filter : filters) {
-            Object postFilterResponse = filter.postProcess(request, rpcResponse, result);
-            if (postFilterResponse != null) {
-                log.info(filter.getClass().getName() + "==>perProcess return: " + postFilterResponse);
-                return postFilterResponse;
-            }
-        }
-        return result;
+        return null;
     }
 
     /**

@@ -66,6 +66,18 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     @Value("${czrpc.env}")
     private String env;
 
+
+    /**
+     * 环境信息
+     */
+    @Value("${czrpc.retries:1}")
+    private int retries;
+    /**
+     * 环境信息
+     */
+    @Value("${czrpc.params.invokeTimeout:1000}")
+    private int invokeTimeout;
+
     /**
      * 注册中心信息
      */
@@ -84,12 +96,13 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         // 获取负载均衡信息
         Router<InstanceMeta> router = applicationContext.getBean(Router.class);
         LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
-
         RpcContext rpcContext = RpcContext.builder()
                 .filters(Collections.singletonList(DefaultFilter))
                 .loadBalancer(loadBalancer)
                 .router(router)
+                .retries(retries)
                 .build();
+        rpcContext.getParams().put("czrpc.params.invokeTimeout", String.valueOf(invokeTimeout));
         processFilter(rpcContext, null);
 
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);

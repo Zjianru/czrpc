@@ -7,6 +7,9 @@ czrpc:
   id: czrpc-demo
   namespace: public
   env: dev
+  retries: 3
+  params:
+    invokeTimeout: 3000
   rpcVersion: 1.0.0
   zkConfig:
     server: localhost:2181

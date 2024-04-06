@@ -23,12 +23,12 @@ public class OkHttpInvoker implements RpcConnect {
 
     MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
 
-    public OkHttpInvoker() {
+    public OkHttpInvoker(int timeout) {
         client = new OkHttpClient.Builder()
                 .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
-                .readTimeout(1, TimeUnit.SECONDS)
-                .writeTimeout(1, TimeUnit.SECONDS)
-                .connectTimeout(1, TimeUnit.SECONDS).build();
+                .readTimeout(timeout, TimeUnit.MICROSECONDS)
+                .writeTimeout(timeout, TimeUnit.MICROSECONDS)
+                .connectTimeout(timeout, TimeUnit.MICROSECONDS).build();
     }
 
     /**

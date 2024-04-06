@@ -1,6 +1,9 @@
 package com.cz.demo.consumer;
 
+import com.cz.demo.api.pojo.User;
+import com.cz.demo.api.service.UserService;
 import com.cz.demo.provider.ProviderApplication;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -8,6 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
+@Slf4j
 @SpringBootTest(classes = ConsumerApplication.class)
 class ConsumeTests {
 
@@ -34,7 +38,10 @@ class ConsumeTests {
 
     @Test
     void contextLoads() {
-        System.out.println(" ===> aaaa  .... ");
+        log.info(" ===> consumer testing  .... ");
+        UserService bean = context.getBean(UserService.class);
+        User user = bean.mockTimeOut(1000);
+        log.info("test finished result is {}", user);
     }
 
     @AfterAll

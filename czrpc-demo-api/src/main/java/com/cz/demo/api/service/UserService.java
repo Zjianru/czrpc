@@ -43,4 +43,6 @@ public interface UserService {
     User findById(long id);
 
     User ex(boolean flag);
+
+    User mockTimeOut(int sleepTime);
 }
