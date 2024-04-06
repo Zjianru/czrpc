@@ -1,5 +1,7 @@
 package com.cz.core.registry.impl;
 
+import com.cz.core.ex.ExErrorCodes;
+import com.cz.core.ex.RpcException;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.Event;
@@ -54,7 +56,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 .namespace(zkRoot)
                 .retryPolicy(retryPolicy)
                 .build();
-        log.info("zookeeper registry center start success! zkservice -->" + zkServer + " zkroot -->" + zkRoot);
+        log.info("zookeeper registry center start success! zkservice -->{} zkroot -->{}", zkServer, zkRoot);
         client.start();
     }
 
@@ -90,7 +92,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             log.info("zookeeper registry center register success! CREATE PATH -->" + instancePath);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e, ExErrorCodes.REGISTER_CENTER_ERROR);
         }
     }
 
@@ -117,7 +119,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             log.info("zookeeper unRegistry center unregister success! DELETE PATH -->" + instancePath);
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e, ExErrorCodes.REGISTER_CENTER_ERROR);
         }
     }
 
@@ -138,7 +140,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             nodes.forEach(System.out::println);
             return mapInstance(nodes);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e, ExErrorCodes.REGISTER_CENTER_ERROR);
         }
     }
 

@@ -1,6 +1,8 @@
 package com.cz.core.provider;
 
 import com.alibaba.fastjson2.JSON;
+import com.cz.core.ex.ExErrorCodes;
+import com.cz.core.ex.RpcException;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
@@ -40,6 +42,7 @@ public class ProviderInvoker {
         Class<?>[] argsType = request.getArgsType();
         Object[] args = request.getArgs();
         RpcResponse<Object> response = new RpcResponse<>();
+        response.setStatus(false);
         try {
             ProviderMeta meta = findProviderMeta(methodSign, providerMetas);
             Method method = meta.getMethod();
@@ -55,13 +58,10 @@ public class ProviderInvoker {
             response.setStatus(true);
             response.setData(result);
         } catch (InvocationTargetException e) {
-            e.getTargetException().printStackTrace();
-            response.setStatus(false);
             // 传播异常信息
-            response.setException(new RuntimeException(e.getTargetException().getMessage()));
+            response.setException(new RpcException(e.getTargetException().getMessage(), ExErrorCodes.PROVIDER_ERROR));
         } catch (IllegalAccessException e) {
-            response.setStatus(false);
-            response.setException(new RuntimeException(e.getMessage()));
+            response.setException(new RpcException(e.getMessage(), ExErrorCodes.PROVIDER_ERROR));
         }
         return response;
     }
@@ -78,6 +78,6 @@ public class ProviderInvoker {
         return providerMetas.stream()
                 .filter(meta -> meta.getMethodSign().equals(methodSign))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("no such method"));
+                .orElseThrow(() -> new RpcException(ExErrorCodes.PROVIDER_NOT_FOUND));
     }
 }

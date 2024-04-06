@@ -2,6 +2,8 @@ package com.cz.core.connect.invoker;
 
 import com.alibaba.fastjson2.JSON;
 import com.cz.core.connect.RpcConnect;
+import com.cz.core.ex.ExErrorCodes;
+import com.cz.core.ex.RpcException;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
 import okhttp3.*;
@@ -47,7 +49,7 @@ public class OkHttpInvoker implements RpcConnect {
             String response = Objects.requireNonNull(client.newCall(request).execute().body()).string();
             return JSON.parseObject(response, RpcResponse.class);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RpcException(e, ExErrorCodes.SOCKET_TIME_OUT);
         }
     }
 }

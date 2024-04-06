@@ -4,6 +4,8 @@ import com.cz.core.connect.RpcConnect;
 import com.cz.core.connect.invoker.OkHttpInvoker;
 import com.cz.core.context.RpcContext;
 import com.cz.core.enhance.Router;
+import com.cz.core.ex.ExErrorCodes;
+import com.cz.core.ex.RpcException;
 import com.cz.core.filter.Filter;
 import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
@@ -108,16 +110,21 @@ public class JdkProxyInvoker implements InvocationHandler {
      */
     private Object responseCastToResult(Method method, Object[] args, RpcResponse<?> rpcResponse) {
         if (rpcResponse == null) {
-            return new RuntimeException(
+            return new RpcException(
                     String.format("Invoke class [%s] method [%s(%s)] error, params:[%S]",
-                            service, method.getName(), Arrays.toString(method.getParameterTypes()), Arrays.toString(args)
-                    ));
+                            service, method.getName(), Arrays.toString(method.getParameterTypes()), Arrays.toString(args),
+                            ExErrorCodes.INVOKER_ERROR));
         }
         if (rpcResponse.isStatus()) {
             return TypeUtils.castMethodResult(method, rpcResponse.getData());
         } else {
             // 服务端异常信息传播到客户端
-            throw new RuntimeException(rpcResponse.getException());
+            Exception exception = rpcResponse.getException();
+            if (exception instanceof RpcException rpcException) {
+                throw rpcException;
+            } else {
+                throw new RpcException(exception, ExErrorCodes.UNKNOWN_ERROR);
+            }
         }
     }
 }
