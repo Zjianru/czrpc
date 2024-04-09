@@ -116,12 +116,13 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                 .router(router)
                 .retries(retries)
                 .build();
-        rpcContext.getParams().put("retries.invokeTimeout", String.valueOf(invokeTimeout));
-
+        Map<String, String> params = new HashMap<>();
+        rpcContext.setParams(params);
+        // 放置超时重试配置
+        params.put("retries.invokeTimeout", String.valueOf(invokeTimeout));
         // 放置半开探活配置
-        rpcContext.getParams().put("isolate.halfOpen.delay", String.valueOf(delay));
-        rpcContext.getParams().put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
-
+        params.put("isolate.halfOpen.delay", String.valueOf(delay));
+        params.put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
         // 处理过滤器
         processFilter(rpcContext, null);
 

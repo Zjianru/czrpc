@@ -1,5 +1,6 @@
 package com.cz.core.registry.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
 import com.cz.core.meta.InstanceMeta;
@@ -17,7 +18,9 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,27 +30,43 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class ZookeeperRegistryCenter implements RegistryCenter {
-    private CuratorFramework client;
-    private TreeCache cache;
 
     /**
      * 环境信息
      */
-    @Value("${czrpc.zkConfig.server}")
+    @Value("${czrpc.zkConfig.server:localhost:2181}")
     private String zkServer;
 
     /**
      * 环境信息
      */
-    @Value("${czrpc.zkConfig.root}")
+    @Value("${czrpc.zkConfig.root:czrpc}")
     private String zkRoot;
 
+    /**
+     * zookeeper client
+     */
+    private CuratorFramework client = null;
+
+    /**
+     * zookeeper caches
+     */
+    private final List<TreeCache> caches = new ArrayList<>();
+
+    /**
+     * check param
+     */
+    private final boolean running = false;
 
     /**
      * 启动注册中心客户端
      */
     @Override
     public void start() {
+        if (running) {
+            log.info(" ===> zk client has started to server[{}/{}], ignored.", zkServer, zkRoot);
+            return;
+        }
         // 重试策略
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         // 链接 zookeeper
@@ -65,8 +84,12 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      */
     @Override
     public void stop() {
+        if (!running) {
+            log.info(" ===> zk client isn't running to server[" + zkServer + "/" + zkRoot + "], ignored.");
+            return;
+        }
         log.info("zookeeper registry center stop success!");
-        cache.close();
+        caches.forEach(TreeCache::close);
         client.close();
     }
 
@@ -89,8 +112,8 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
             }
             // 创建实例节点路径
-            log.info("zookeeper registry center register success! CREATE PATH -->" + instancePath);
-            client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, "provider".getBytes());
+            log.info("zookeeper registry center register success! CREATE PATH -->{}", instancePath);
+            client.create().withMode(CreateMode.EPHEMERAL).forPath(instancePath, instance.metasTransfer().getBytes());
         } catch (Exception e) {
             throw new RpcException(e, ExErrorCodes.REGISTER_CENTER_ERROR);
         }
@@ -116,7 +139,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 return;
             }
             // 删除实例节点
-            log.info("zookeeper unRegistry center unregister success! DELETE PATH -->" + instancePath);
+            log.info("zookeeper unRegistry center unregister success! DELETE PATH -->{}", instancePath);
             client.delete().quietly().forPath(instancePath);
         } catch (Exception e) {
             throw new RpcException(e, ExErrorCodes.REGISTER_CENTER_ERROR);
@@ -136,18 +159,38 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
         try {
             // 获取所有子节点
             List<String> nodes = client.getChildren().forPath(servicePath);
-            log.info("zookeeper fetchAll success! service path -->" + servicePath);
-            nodes.forEach(System.out::println);
-            return mapInstance(nodes);
+            log.info("zookeeper fetchAll success! service path -->{}", servicePath);
+            return mapInstance(nodes, servicePath);
         } catch (Exception e) {
             throw new RpcException(e, ExErrorCodes.REGISTER_CENTER_ERROR);
         }
     }
 
-    private static List<InstanceMeta> mapInstance(List<String> nodes) {
+    /**
+     * 组装 instance 信息
+     *
+     * @param nodes       节点
+     * @param servicePath 服务路径
+     * @return 组装好的 instance
+     */
+    private List<InstanceMeta> mapInstance(List<String> nodes, String servicePath) {
         return nodes.stream().map(x -> {
             String[] split = x.split("_");
-            return InstanceMeta.http(split[0], Integer.parseInt(split[1]));
+            InstanceMeta instance = InstanceMeta.http(split[0], Integer.parseInt(split[1]));
+            log.debug("instance url ==>{}", instance.transferToUrl());
+            byte[] bytes;
+            try {
+                bytes = client.getData().forPath(servicePath + "/" + x);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            Map<String, Object> params = JSON.parseObject(new String(bytes));
+            params.forEach((k, v) -> {
+                log.debug("{} -> {}", k, v);
+                instance.getParams().put(k, v == null ? null : v.toString());
+            });
+            log.debug("instance metasTransfer ==>{}", instance.metasTransfer());
+            return instance;
         }).collect(Collectors.toList());
     }
 
@@ -161,16 +204,21 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     @Override
     @SneakyThrows
     public void subscribe(ServiceMeta service, ChangedListener listener) {
-        cache = TreeCache.newBuilder(client, "/" + service.toPath())
+        final TreeCache cache = TreeCache.newBuilder(client, "/" + service.toPath())
                 .setCacheData(true)
                 .setMaxDepth(2)
                 .build();
         cache.getListenable().addListener((curator, event) -> {
-            // 有任何节点变动 就会执行
-            log.info("zk subscribe event:" + event);
-            List<InstanceMeta> metas = fetchAll(service);
-            listener.fire(new Event(metas));
+            synchronized (ZookeeperRegistryCenter.class) {
+                if (running) {
+                    // 有任何节点变动 就会执行
+                    log.info("zk subscribe event:{}", event);
+                    List<InstanceMeta> metas = fetchAll(service);
+                    listener.fire(new Event(metas));
+                }
+            }
         });
         cache.start();
+        caches.add(cache);
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,7 +45,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
      */
     private InstanceMeta instance;
 
-
     /**
      * 端口信息
      */
@@ -68,6 +68,31 @@ public class ProviderBootstrap implements ApplicationContextAware {
      */
     @Value("${czrpc.env}")
     private String env;
+
+    /**
+     * 机房信息
+     */
+    @Value("${czrpc.metas.dc}")
+    private String dc;
+
+    /**
+     * 单元信息
+     */
+    @Value("${czrpc.metas.unit}")
+    private String unit;
+
+    /**
+     * 是否开启灰度发布
+     */
+    @Value("${czrpc.metas.gray}")
+    private String gray;
+
+    /**
+     * 蓝绿发布 - 当前实例是否上线
+     */
+    @Value("${czrpc.metas.online}")
+    private String online;
+
 
     /**
      * 服务提供者注册表 存储接口中方法级别的元数据
@@ -102,6 +127,14 @@ public class ProviderBootstrap implements ApplicationContextAware {
     public void start() {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
         instance = InstanceMeta.http(hostAddress, Integer.valueOf(port));
+        // 实例打标
+        Map<String, String> params = new HashMap<>();
+        params.put("dc", dc);
+        params.put("unit", unit);
+        params.put("gray", gray);
+        params.put("online", online);
+        instance.setParams(params);
+
         // 先启动客户端 后注册服务
         registryCenter.start();
         skeleton.keySet().forEach(this::registerService);

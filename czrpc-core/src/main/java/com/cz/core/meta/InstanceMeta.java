@@ -1,5 +1,6 @@
 package com.cz.core.meta;
 
+import com.alibaba.fastjson2.JSON;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,10 +38,16 @@ public class InstanceMeta {
     private String scheme;
 
     /**
-     * online or offline
+     * 蓝绿 - 上线状态
      */
     private boolean status;
 
+    /**
+     * 附加参数
+     * 目前包含
+     * [打标]-> gray/unit/dc
+     * [蓝绿]-> online
+     */
     private Map<String, String> params;
 
     /**
@@ -70,5 +77,14 @@ public class InstanceMeta {
      */
     public String transferToUrl() {
         return String.format("%s://%s:%d/%s", scheme, host, port, context);
+    }
+
+    /**
+     * 将附加参数列表转换为 json 串
+     *
+     * @return json string
+     */
+    public String metasTransfer() {
+        return JSON.toJSONString(getParams());
     }
 }

@@ -7,7 +7,13 @@ czrpc:
   id: czrpc-demo
   namespace: public
   env: dev
-  rpcVersion: 1.0.0
+  #  服务元信息，灰度打标用 - [provider only]
+  metas:
+    gray: false
+    dc: bj
+    unit: 001
+    online: true
+  #    注册中心配置
   zkConfig:
     server: localhost:2181
     root: czrpc
