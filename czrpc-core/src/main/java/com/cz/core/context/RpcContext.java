@@ -33,7 +33,7 @@ public class RpcContext {
     /**
      * 服务元数据参数
      * 目前参数如下，后面跟随默认设置：
-     * czrpc.params.invokeTimeout=>1000
+     * invokeTimeout=>1000
      */
     Map<String, String> params;
     /**

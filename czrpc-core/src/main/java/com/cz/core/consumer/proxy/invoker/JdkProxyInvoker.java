@@ -3,11 +3,10 @@ package com.cz.core.consumer.proxy.invoker;
 import com.cz.core.connect.RpcConnect;
 import com.cz.core.connect.invoker.OkHttpInvoker;
 import com.cz.core.context.RpcContext;
-import com.cz.core.enhance.Router;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
 import com.cz.core.filter.Filter;
-import com.cz.core.loadBalance.LoadBalancer;
+import com.cz.core.governance.SlidingTimeWindow;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
@@ -19,8 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.SocketTimeoutException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 消费者代理类 - JDK 代理方式
@@ -40,14 +41,34 @@ public class JdkProxyInvoker implements InvocationHandler {
     RpcContext context;
 
     /**
-     * 服务提供者信息
-     */
-    List<InstanceMeta> providerUrls;
-
-    /**
      * RPC 连接器
      */
     RpcConnect rpcConnect;
+
+    /**
+     * 服务提供者信息
+     */
+    final List<InstanceMeta> providerUrls;
+
+    /**
+     * 被隔离的提供者信息
+     */
+    final List<InstanceMeta> isolatedInstance = new LinkedList<>();
+
+    /**
+     * 探活的提供者信息
+     */
+    final List<InstanceMeta> halfOpenInstance = new LinkedList<>();
+
+    /**
+     * 记录提供者异常次数的滑动时间集合
+     */
+    Map<String, SlidingTimeWindow> windows = new HashMap<>();
+
+    /**
+     * 探活线程
+     */
+    ScheduledExecutorService executor;
 
     /**
      * constructor
@@ -60,9 +81,14 @@ public class JdkProxyInvoker implements InvocationHandler {
         this.service = service;
         this.context = rpcContext;
         this.providerUrls = providerUrls;
-        int timeout = Integer.parseInt(context.getParams().getOrDefault("czrpc.params.invokeTimeout", "1000"));
-        rpcConnect = new OkHttpInvoker(timeout);
+        int timeout = Integer.parseInt(context.getParams().getOrDefault("retries.invokeTimeout", "1000"));
+        this.rpcConnect = new OkHttpInvoker(timeout);
+        isolateAndHalfOpenConfig(
+                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.initialDelay", "10")),
+                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.delay", "60"))
+        );
     }
+
 
     /**
      * 动态代理已拦截请求，封装 RPC 请求并完成通信
@@ -90,26 +116,65 @@ public class JdkProxyInvoker implements InvocationHandler {
                 for (Filter filter : filters) {
                     Object perFilterResponse = filter.perProcess(request);
                     if (perFilterResponse != null) {
-                        log.info(filter.getClass().getName() + "==>perProcess return: " + perFilterResponse);
+                        log.debug("{}==>perProcess return: {}", filter.getClass().getName(), perFilterResponse);
                         return perFilterResponse;
                     }
                 }
-                // 负载均衡处理
-                Router<InstanceMeta> router = context.getRouter();
-                LoadBalancer<InstanceMeta> loadBalancer = context.getLoadBalancer();
-                InstanceMeta chosenProvider = LoadBalanceUtil.chooseProvider(router, loadBalancer, providerUrls);
-                // 发起实际请求
-                RpcResponse<?> rpcResponse = rpcConnect.connect(request, chosenProvider.transferToUrl());
-                // 返回值处理
-                Object result = responseCastToResult(method, args, rpcResponse);
+
+                // 半开探活与负载均衡
+                InstanceMeta chosenProvider;
+                synchronized (halfOpenInstance) {
+                    if (halfOpenInstance.isEmpty()) {
+                        // 不需要进行探活，调动负载均衡进行处理
+                        chosenProvider = LoadBalanceUtil.chooseProvider(context.getRouter(), context.getLoadBalancer(), providerUrls);
+                        log.debug("finally load balance choose is ===> {}", chosenProvider);
+                    } else {
+                        // 随便取出一个节点进行探活，由于探活频次，对流量影响可忽略不计
+                        chosenProvider = halfOpenInstance.remove(0);
+                    }
+                }
+
+                String chosenProviderUrl = chosenProvider.transferToUrl();
+                RpcResponse<?> rpcResponse;
+                Object result;
+                // 故障隔离
+                try {
+                    // 发起实际请求
+                    rpcResponse = rpcConnect.connect(request, chosenProviderUrl);
+                    // 返回值处理
+                    result = responseCastToResult(method, args, rpcResponse);
+                } catch (Exception e) {
+                    // 故障的规则统计与隔离
+                    SlidingTimeWindow window = windows.computeIfAbsent(chosenProviderUrl, k -> new SlidingTimeWindow());
+                    // 每一次异常，记录一次，统计 30S 之内的异常次数
+                    window.record(System.currentTimeMillis());
+                    int exceptionTimes = window.getSum();
+                    log.debug("provider {} in window with {}", chosenProviderUrl, exceptionTimes);
+                    // 单位时间内异常次数超过 10 次，进行故障隔离
+                    if (exceptionTimes >= 10) {
+                        isolate(chosenProvider);
+                    }
+                    throw e;
+                }
+
                 // 后置过滤器处理
                 for (Filter filter : filters) {
                     Object postFilterResponse = filter.postProcess(request, rpcResponse, result);
                     if (postFilterResponse != null) {
-                        log.info(filter.getClass().getName() + "==>perProcess return: " + postFilterResponse);
+                        log.debug("{}==>postProcess return: {}", filter.getClass().getName(), postFilterResponse);
                         return postFilterResponse;
                     }
                 }
+
+                // 放开被隔离的提供者节点
+                synchronized (providerUrls) {
+                    if (!providerUrls.contains(chosenProvider)) {
+                        isolatedInstance.remove(chosenProvider);
+                        providerUrls.add(chosenProvider);
+                        log.debug("已放开被隔离的提供者节点，providerUrls==>{},isolatedInstance==>{}", providerUrls, isolatedInstance);
+                    }
+                }
+
                 return result;
             } catch (RpcException e) {
                 log.error("Invoke class [{}] method [{}] error, params:[{}], retry times: [{}]",
@@ -120,6 +185,41 @@ public class JdkProxyInvoker implements InvocationHandler {
             }
         }
         return null;
+    }
+
+    /**
+     * 配置半开探活的线程池
+     * 默认探活频次间隔 - 秒
+     *
+     * @param initialDelay 初始延迟
+     * @param delay        频次间隔
+     */
+    private void isolateAndHalfOpenConfig(long initialDelay, long delay) {
+        this.executor = Executors.newScheduledThreadPool(1);
+        // 在给定的初始延迟之后，按照固定的延迟时间周期性地执行任务
+        this.executor.scheduleWithFixedDelay(this::halfOpen, initialDelay, delay, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 半开探活
+     */
+    private void halfOpen() {
+        log.debug("===> halfOpenInstance ==> {},isolatedInstance==>{}", halfOpenInstance, isolatedInstance);
+        halfOpenInstance.clear();
+        halfOpenInstance.addAll(isolatedInstance);
+    }
+
+    /**
+     * 完成故障隔离
+     *
+     * @param chosenProvider 待隔离的提供者
+     */
+    private void isolate(InstanceMeta chosenProvider) {
+        log.debug("current isolate provider {}", chosenProvider);
+        providerUrls.remove(chosenProvider);
+        log.debug("finished isolate ... current providers ==> {}", providerUrls);
+        isolatedInstance.add(chosenProvider);
+        log.debug("finished isolate... current isolatedUrls is ==> {}", isolatedInstance);
     }
 
     /**

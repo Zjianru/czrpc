@@ -25,9 +25,7 @@ public class LoadBalanceUtil {
      */
     public static InstanceMeta chooseProvider(Router<InstanceMeta> router, LoadBalancer<InstanceMeta> loadBalancer, List<InstanceMeta> providers) {
         List<InstanceMeta> route = router.selectRoute(providers);
-        InstanceMeta choose = loadBalancer.choose(route);
-        log.debug("finally load balance choose is ===> " + choose);
-        return choose;
+        return loadBalancer.choose(route);
     }
 
 }

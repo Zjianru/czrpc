@@ -66,17 +66,29 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     @Value("${czrpc.env}")
     private String env;
 
-
     /**
-     * 环境信息
+     * 重试次数
      */
     @Value("${czrpc.retries:1}")
     private int retries;
+
     /**
-     * 环境信息
+     * 重试阈值 - 超时达到此阈值，即进行重试
      */
     @Value("${czrpc.params.invokeTimeout:1000}")
     private int invokeTimeout;
+
+    /**
+     * 半开探活初始延迟
+     */
+    @Value("${czrpc.isolate.halfOpen.initialDelay:10}")
+    private long initialDelay;
+
+    /**
+     * 半开探活每次间隔，单位 - 秒
+     */
+    @Value("${czrpc.isolate.halfOpen.delay:60}")
+    private long delay;
 
     /**
      * 注册中心信息
@@ -96,13 +108,21 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         // 获取负载均衡信息
         Router<InstanceMeta> router = applicationContext.getBean(Router.class);
         LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
+
+        // 初始化 rpcContext
         RpcContext rpcContext = RpcContext.builder()
                 .filters(Collections.singletonList(DefaultFilter))
                 .loadBalancer(loadBalancer)
                 .router(router)
                 .retries(retries)
                 .build();
-        rpcContext.getParams().put("czrpc.params.invokeTimeout", String.valueOf(invokeTimeout));
+        rpcContext.getParams().put("retries.invokeTimeout", String.valueOf(invokeTimeout));
+
+        // 放置半开探活配置
+        rpcContext.getParams().put("isolate.halfOpen.delay", String.valueOf(delay));
+        rpcContext.getParams().put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
+
+        // 处理过滤器
         processFilter(rpcContext, null);
 
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
