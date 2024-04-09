@@ -9,6 +9,7 @@ import java.util.Random;
 
 /**
  * 灰度路由
+ * 可实现灰度用户 或对一次请求上加灰度标记
  *
  * @author Zjianru
  */
