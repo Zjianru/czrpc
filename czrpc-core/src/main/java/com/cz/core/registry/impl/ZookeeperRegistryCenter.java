@@ -109,7 +109,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
         try {
             if (client.checkExists().forPath(servicePath) == null) {
                 // 没找到服务节点路径，创建持久化节点
-                client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, "service".getBytes());
+                client.create().withMode(CreateMode.PERSISTENT).forPath(servicePath, service.metasTransfer().getBytes());
             }
             // 创建实例节点路径
             log.info("zookeeper registry center register success! CREATE PATH -->{}", instancePath);
