@@ -10,7 +10,10 @@ czrpc:
   retries: 3
   params:
     invokeTimeout: 3000
-  rpcVersion: 1.0.0
+  #  服务元信息，灰度打标用 - [consumer only]
+  metas:
+    grayRadio: 10 # 灰度 - 流量调拨比重 0-100
+  #    注册中心配置
   zkConfig:
     server: localhost:2181
     root: czrpc

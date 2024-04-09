@@ -1,15 +1,16 @@
 package com.cz.core.consumer;
 
-import com.cz.core.enhance.Router;
 import com.cz.core.filter.Filter;
 import com.cz.core.filter.policy.CacheFilter;
-import com.cz.core.filter.policy.MockFilter;
 import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.loadBalance.policy.RoundRobinLoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.RegistryCenter;
 import com.cz.core.registry.impl.ZookeeperRegistryCenter;
+import com.cz.core.router.Router;
+import com.cz.core.router.policy.GrayRouter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,9 +57,14 @@ public class ConsumerConfig {
      *
      * @return 路由实现
      */
+    /**
+     * 灰度 - 流量调拨比重 0-100
+     */
+    @Value("${czrpc.metas.grayRadio:10}")
+    private int grayRadio;
     @Bean
     public Router<InstanceMeta> router() {
-        return Router.Default;
+        return new GrayRouter(grayRadio);
     }
 
     /**
@@ -86,9 +92,9 @@ public class ConsumerConfig {
      *
      * @return 过滤器实现
      */
-    @Bean
-    public Filter mockFilter() {
-        return new MockFilter();
-    }
+//    @Bean
+//    public Filter mockFilter() {
+//        return new MockFilter();
+//    }
 
 }

@@ -3,12 +3,12 @@ package com.cz.core.consumer;
 import com.cz.core.annotation.CzConsumer;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
-import com.cz.core.enhance.Router;
 import com.cz.core.filter.Filter;
 import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.RegistryCenter;
+import com.cz.core.router.Router;
 import com.cz.core.util.MethodUtils;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
@@ -91,6 +91,12 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     private long delay;
 
     /**
+     * 灰度 - 流量调拨比重 0-100
+     */
+    @Value("${czrpc.metas.grayRadio:10}")
+    private int grayRadio;
+
+    /**
      * 注册中心信息
      */
     private Map<String, Object> stub = new HashMap<>();
@@ -123,6 +129,8 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
         // 放置半开探活配置
         params.put("isolate.halfOpen.delay", String.valueOf(delay));
         params.put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
+        // 灰度 - 流量调拨比重
+        params.put("metas.grayRadio", String.valueOf(grayRadio));
         // 处理过滤器
         processFilter(rpcContext, null);
 
