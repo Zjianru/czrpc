@@ -126,9 +126,11 @@ public class JdkProxyInvoker implements InvocationHandler {
                 synchronized (halfOpenInstance) {
                     if (halfOpenInstance.isEmpty()) {
                         // 不需要进行探活，调动负载均衡进行处理
+                        log.debug("==>不需要进行探活<==");
                         chosenProvider = LoadBalanceUtil.chooseProvider(context.getRouter(), context.getLoadBalancer(), providerUrls);
                         log.debug("finally load balance choose is ===> {}", chosenProvider);
                     } else {
+                        log.debug("==>正在进行探活<==");
                         // 随便取出一个节点进行探活，由于探活频次，对流量影响可忽略不计
                         chosenProvider = halfOpenInstance.remove(0);
                     }
