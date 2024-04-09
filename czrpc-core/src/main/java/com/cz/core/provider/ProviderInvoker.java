@@ -1,15 +1,16 @@
 package com.cz.core.provider;
 
-import com.alibaba.fastjson2.JSON;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
+import com.cz.core.util.TypeUtils;
 import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 
 /**
@@ -39,22 +40,13 @@ public class ProviderInvoker {
     public RpcResponse<Object> invoke(RpcRequest request) {
         String methodSign = request.getMethodSign();
         List<ProviderMeta> providerMetas = skeleton.get(request.getService().getCanonicalName());
-        Class<?>[] argsType = request.getArgsType();
-        Object[] args = request.getArgs();
         RpcResponse<Object> response = new RpcResponse<>();
         response.setStatus(false);
         try {
             ProviderMeta meta = findProviderMeta(methodSign, providerMetas);
             Method method = meta.getMethod();
-            if (argsType == null) {
-                argsType = method.getParameterTypes();
-            }
-            Object[] realArgs = new Object[argsType.length];
-            for (int i = 0; i < argsType.length; i++) {
-                Object realArg = JSON.to(argsType[i], args[i]);
-                realArgs[i] = realArg;
-            }
-            Object result = method.invoke(meta.getTargetService(), realArgs);
+            Object[] args = processArgs(request.getArgs(), method.getParameterTypes(), method.getGenericParameterTypes());
+            Object result = method.invoke(meta.getTargetService(), args);
             response.setStatus(true);
             response.setData(result);
         } catch (InvocationTargetException e) {
@@ -80,4 +72,22 @@ public class ProviderInvoker {
                 .findFirst()
                 .orElseThrow(() -> new RpcException(ExErrorCodes.PROVIDER_NOT_FOUND));
     }
+
+    /**
+     * 处理参数转型
+     *
+     * @param args                  参数
+     * @param parameterTypes        参数类型
+     * @param genericParameterTypes 泛型
+     * @return 处理后的参数
+     */
+    private Object[] processArgs(Object[] args, Class<?>[] parameterTypes, Type[] genericParameterTypes) {
+        if (args == null || args.length == 0) return args;
+        Object[] actual = new Object[args.length];
+        for (int i = 0; i < args.length; i++) {
+            actual[i] = TypeUtils.castGeneric(args[i], parameterTypes[i], genericParameterTypes[i]);
+        }
+        return actual;
+    }
+
 }

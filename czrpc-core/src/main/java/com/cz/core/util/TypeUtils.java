@@ -1,6 +1,5 @@
 package com.cz.core.util;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +24,6 @@ public class TypeUtils {
      * @param type   目标类型
      * @return 转换后的数据
      */
-
     public static Object cast(Object origin, Class<?> type) {
         if (origin == null) return null;
         Class<?> aClass = origin.getClass();
@@ -58,6 +56,7 @@ public class TypeUtils {
         }
 
         if (origin instanceof JSONObject jsonObject) {
+            log.debug(" ======> JSONObject -> {}", type);
             return jsonObject.toJavaObject(type);
         }
 
@@ -89,30 +88,61 @@ public class TypeUtils {
      * @return 转换后的数据
      */
     public static Object castMethodResult(Method method, Object data) {
+        log.debug("castMethodResult: method = {}", method);
+        log.debug("castMethodResult: data = {}", data);
         Class<?> type = method.getReturnType();
-        log.debug("method.getReturnType() = " + type);
-        if (data instanceof JSONObject jsonResult) {
+        Type genericReturnType = method.getGenericReturnType();
+        return castGeneric(data, type, genericReturnType);
+    }
+
+    /**
+     * 泛型转换处理
+     *
+     * @param data              data
+     * @param type              类型
+     * @param genericReturnType 返回值类型
+     * @return 转换后结果
+     */
+    public static Object castGeneric(Object data, Class<?> type, Type genericReturnType) {
+        log.debug("castGeneric: data = {}", data);
+        log.debug("castGeneric: method.getReturnType() = {}", type);
+        log.debug("castGeneric: method.getGenericReturnType() = {}", genericReturnType);
+        if (data instanceof Map map) {
+            // data是map的情况包括两种，一种是HashMap，一种是JSONObject
             if (Map.class.isAssignableFrom(type)) {
+                // 目标类型是 Map，此时data可能是map也可能是JO
+                log.debug(" ======> map -> map");
                 Map resultMap = new HashMap();
-                Type genericReturnType = method.getGenericReturnType();
                 log.debug(genericReturnType.toString());
                 if (genericReturnType instanceof ParameterizedType parameterizedType) {
                     Class<?> keyType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
                     Class<?> valueType = (Class<?>) parameterizedType.getActualTypeArguments()[1];
-                    jsonResult.entrySet().stream().forEach(
-                            e -> {
-                                Object key = cast(e.getKey(), keyType);
-                                Object value = cast(e.getValue(), valueType);
+                    log.debug("keyType  : {}", keyType);
+                    log.debug("valueType: {}", valueType);
+                    map.forEach(
+                            (k, v) -> {
+                                Object key = cast(k, keyType);
+                                Object value = cast(v, valueType);
                                 resultMap.put(key, value);
                             }
                     );
                 }
                 return resultMap;
             }
-            return jsonResult.toJavaObject(type);
-        } else if (data instanceof JSONArray jsonArray) {
-            Object[] array = jsonArray.toArray();
+            if (data instanceof JSONObject jsonObject) {// 此时是Pojo，且数据是JO
+                log.debug(" ======> JSONObject -> Pojo");
+                return jsonObject.toJavaObject(type);
+            } else if (!Map.class.isAssignableFrom(type)) { // 此时是Pojo类型，数据是Map
+                log.debug(" ======> map -> Pojo");
+                return new JSONObject(map).toJavaObject(type);
+            } else {
+                log.debug(" ======> map -> ?");
+                return data;
+            }
+        } else if (data instanceof List list) {
+            Object[] array = list.toArray();
             if (type.isArray()) {
+                log.debug(" ======> list -> []");
                 Class<?> componentType = type.getComponentType();
                 Object resultArray = Array.newInstance(componentType, array.length);
                 for (int i = 0; i < array.length; i++) {
@@ -125,8 +155,8 @@ public class TypeUtils {
                 }
                 return resultArray;
             } else if (List.class.isAssignableFrom(type)) {
+                log.debug(" ======> list -> list");
                 List<Object> resultList = new ArrayList<>(array.length);
-                Type genericReturnType = method.getGenericReturnType();
                 log.debug(genericReturnType.toString());
                 if (genericReturnType instanceof ParameterizedType parameterizedType) {
                     Type actualType = parameterizedType.getActualTypeArguments()[0];
