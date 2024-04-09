@@ -19,5 +19,5 @@ czrpc:
     root: czrpc
 logging:
   level:
-    root: error
-    com.cz: info
+    root: info
+    com.cz: debug

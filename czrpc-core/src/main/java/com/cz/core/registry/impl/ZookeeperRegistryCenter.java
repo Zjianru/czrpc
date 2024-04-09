@@ -19,6 +19,7 @@ import org.apache.zookeeper.CreateMode;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -85,7 +86,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     @Override
     public void stop() {
         if (!running) {
-            log.info(" ===> zk client isn't running to server[" + zkServer + "/" + zkRoot + "], ignored.");
+            log.info(" ===> zk client isn't running to server[{}/{}], ignored.", zkServer, zkRoot);
             return;
         }
         log.info("zookeeper registry center stop success!");
@@ -178,6 +179,7 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             String[] split = x.split("_");
             InstanceMeta instance = InstanceMeta.http(split[0], Integer.parseInt(split[1]));
             log.debug("instance url ==>{}", instance.transferToUrl());
+            System.out.println("instance url ==> " + instance.transferToUrl());
             byte[] bytes;
             try {
                 bytes = client.getData().forPath(servicePath + "/" + x);
@@ -187,9 +189,16 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
             Map<String, Object> params = JSON.parseObject(new String(bytes));
             params.forEach((k, v) -> {
                 log.debug("{} -> {}", k, v);
-                instance.getParams().put(k, v == null ? null : v.toString());
+                System.out.println("k--> " + k + " v-->" + v);
+                Map<String, String> instanceParams = instance.getParams();
+                if (instanceParams == null) {
+                    instanceParams = new HashMap<>();
+                }
+                instanceParams.put(k, v == null ? null : v.toString());
+                instance.setParams(instanceParams);
             });
             log.debug("instance metasTransfer ==>{}", instance.metasTransfer());
+            System.out.println("instance metasTransfer ==>{" + instance.metasTransfer() + "}");
             return instance;
         }).collect(Collectors.toList());
     }
@@ -210,12 +219,12 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 .build();
         cache.getListenable().addListener((curator, event) -> {
             synchronized (ZookeeperRegistryCenter.class) {
-                if (running) {
-                    // 有任何节点变动 就会执行
-                    log.info("zk subscribe event:{}", event);
-                    List<InstanceMeta> metas = fetchAll(service);
-                    listener.fire(new Event(metas));
-                }
+//                if (running) {
+                // 有任何节点变动 就会执行
+                log.info("zk subscribe event:{}", event);
+                List<InstanceMeta> metas = fetchAll(service);
+                listener.fire(new Event(metas));
+//                }
             }
         });
         cache.start();
