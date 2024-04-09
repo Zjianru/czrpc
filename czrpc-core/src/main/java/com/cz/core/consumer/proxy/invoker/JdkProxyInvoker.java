@@ -63,7 +63,7 @@ public class JdkProxyInvoker implements InvocationHandler {
     /**
      * 记录提供者异常次数的滑动时间集合
      */
-    Map<String, SlidingTimeWindow> windows = new HashMap<>();
+    final Map<String, SlidingTimeWindow> windows = new HashMap<>();
 
     /**
      * 探活线程
@@ -147,14 +147,17 @@ public class JdkProxyInvoker implements InvocationHandler {
                     result = responseCastToResult(method, args, rpcResponse);
                 } catch (Exception e) {
                     // 故障的规则统计与隔离
-                    SlidingTimeWindow window = windows.computeIfAbsent(chosenProviderUrl, k -> new SlidingTimeWindow());
-                    // 每一次异常，记录一次，统计 30S 之内的异常次数
-                    window.record(System.currentTimeMillis());
-                    int exceptionTimes = window.getSum();
-                    log.debug("provider {} in window with {}", chosenProviderUrl, exceptionTimes);
-                    // 单位时间内异常次数超过 10 次，进行故障隔离
-                    if (exceptionTimes >= 10) {
-                        isolate(chosenProvider);
+                    // 不加入并发限制，可导致异常超过 10 次仍不被隔离，并非严格遵循配置次数
+                    synchronized (windows) {
+                        SlidingTimeWindow window = windows.computeIfAbsent(chosenProviderUrl, k -> new SlidingTimeWindow());
+                        // 每一次异常，记录一次，统计 30S 之内的异常次数
+                        window.record(System.currentTimeMillis());
+                        int exceptionTimes = window.getSum();
+                        log.debug("provider {} in window with {}", chosenProviderUrl, exceptionTimes);
+                        // 单位时间内异常次数超过 10 次，进行故障隔离
+                        if (exceptionTimes >= 10) {
+                            isolate(chosenProvider);
+                        }
                     }
                     throw e;
                 }
