@@ -3,6 +3,7 @@ package com.cz.core.provider;
 import com.cz.core.context.RpcContext;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
+import com.cz.core.governance.SlidingTimeWindow;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
@@ -13,7 +14,9 @@ import org.springframework.util.MultiValueMap;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 实现具体 RPC 调用
@@ -29,6 +32,11 @@ public class ProviderInvoker {
      * value: 接口中的所有自定义方法
      */
     private final MultiValueMap<String, ProviderMeta> skeleton;
+
+    private final int tpsLimit = 20;
+
+    final Map<String, SlidingTimeWindow> windows = new HashMap<>();
+
 
     public ProviderInvoker(ProviderBootstrap providerBootstrap) {
         this.skeleton = providerBootstrap.getSkeleton();
@@ -46,8 +54,23 @@ public class ProviderInvoker {
             request.getParams().forEach(RpcContext::setContextParameter);
         }
         String methodSign = request.getMethodSign();
-        List<ProviderMeta> providerMetas = skeleton.get(request.getService().getCanonicalName());
         RpcResponse<Object> response = new RpcResponse<>();
+
+        // provider traffic control
+        String service = request.getService().getCanonicalName();
+        synchronized (windows) {
+            SlidingTimeWindow window = windows.computeIfAbsent(service, k -> new SlidingTimeWindow());
+            if (window.calcSum() >= tpsLimit) {
+                System.out.println(window);
+                throw new RpcException("service " + service + " invoked in 30s/[" +
+                        window.getSum() + "] larger than tpsLimit = " + tpsLimit, ExErrorCodes.TPS_EXCEED_LIMIT);
+            } else {
+                window.record(System.currentTimeMillis());
+                log.debug("service {} in window with {}", service, window.getSum());
+            }
+        }
+
+        List<ProviderMeta> providerMetas = skeleton.get(service);
         response.setStatus(false);
         try {
             ProviderMeta meta = findProviderMeta(methodSign, providerMetas);

@@ -15,6 +15,7 @@ public enum ExErrorCodes {
     PROVIDER_NOT_FOUND("X", "004", "provider not found"),
     REGISTER_CENTER_ERROR("X", "005", "register center error"),
     INVOKER_ERROR("X", "005", "invoker error"),
+    TPS_EXCEED_LIMIT("X", "006", "tps exceed limit"),
 
     UNKNOWN_ERROR("Z", "001", "unknown error"),
 

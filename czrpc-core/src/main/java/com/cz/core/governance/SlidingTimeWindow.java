@@ -10,19 +10,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author Zjianru
  */
+@Getter
 @ToString
 @Slf4j
 public class SlidingTimeWindow {
 
     public static final int DEFAULT_SIZE = 30;
 
-    @Getter
     private final int size;
-    @Getter
     private final RingBuffer ringBuffer;
-    @Getter
     private int sum = 0;
-
     private int currMark = -1;
     private long startTs = -1L;
     private long currTs = -1L;
@@ -76,16 +73,22 @@ public class SlidingTimeWindow {
         this.ringBuffer.incr(0, 1);
     }
 
-    public int get_curr_mark() {
-        return currMark;
+    public int calcSum() {
+        long ts = System.currentTimeMillis() / 1000;
+        log.debug("calc sum for window ts:{}, curr_ts:{}, size:{}", ts, currTs, size);
+        if (ts > currTs && ts < currTs + size) {
+            int offset = (int) (ts - currTs);
+            log.debug("=========>>>calc sum for window ts:{}, curr_ts:{}, size:{}, offset:{}", ts, currTs, size, offset);
+            this.ringBuffer.reset(currMark + 1, offset);
+            currTs = ts;
+            currMark = (currMark + offset) % size;
+        } else if (ts >= currTs + size) {
+            this.ringBuffer.reset();
+            initRing(ts);
+        }
+        log.debug("calc sum for window:{}", this);
+        return ringBuffer.sum();
     }
 
-    public long get_start_ts() {
-        return startTs;
-    }
-
-    public long get_curr_ts() {
-        return currTs;
-    }
 
 }
