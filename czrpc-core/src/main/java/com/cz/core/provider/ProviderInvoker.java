@@ -33,13 +33,16 @@ public class ProviderInvoker {
      */
     private final MultiValueMap<String, ProviderMeta> skeleton;
 
-    private final int tpsLimit = 20;
+    private final int trafficControl;
 
     final Map<String, SlidingTimeWindow> windows = new HashMap<>();
 
+    final Map<String, String> metas;
 
     public ProviderInvoker(ProviderBootstrap providerBootstrap) {
         this.skeleton = providerBootstrap.getSkeleton();
+        this.metas = providerBootstrap.getProviderProperties().getMetas();
+        this.trafficControl = Integer.parseInt(metas.getOrDefault("trafficControl", "20"));
     }
 
     /**
@@ -60,10 +63,10 @@ public class ProviderInvoker {
         String service = request.getService().getCanonicalName();
         synchronized (windows) {
             SlidingTimeWindow window = windows.computeIfAbsent(service, k -> new SlidingTimeWindow());
-            if (window.calcSum() >= tpsLimit) {
+            if (window.calcSum() >= trafficControl) {
                 System.out.println(window);
                 throw new RpcException("service " + service + " invoked in 30s/[" +
-                        window.getSum() + "] larger than tpsLimit = " + tpsLimit, ExErrorCodes.TPS_EXCEED_LIMIT);
+                        window.getSum() + "] larger than tpsLimit = " + trafficControl, ExErrorCodes.TPS_EXCEED_LIMIT);
             } else {
                 window.record(System.currentTimeMillis());
                 log.debug("service {} in window with {}", service, window.getSum());

@@ -15,6 +15,7 @@ czrpc:
     dc: bj
     unit: 001
     online: true
+    trafficControl: 20
   #    注册中心配置
   registryCenter:
     server: localhost:2181

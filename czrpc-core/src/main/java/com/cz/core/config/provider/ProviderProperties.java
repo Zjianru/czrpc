@@ -22,7 +22,7 @@ public class ProviderProperties {
     boolean gray = false;
     String dc = "bj";
     String unit = "001";
-
+    int trafficControl;
     /**
      * get metas
      *
@@ -34,6 +34,7 @@ public class ProviderProperties {
         metas.put("gray", String.valueOf(gray));
         metas.put("dc", dc);
         metas.put("unit", unit);
+        metas.put("trafficControl", String.valueOf(trafficControl));
         return metas;
     }
 
