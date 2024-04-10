@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.cz</groupId>
         <artifactId>czrpc</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${czrpc.version}</version>
     </parent>
 
     <artifactId>czrpc-core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${czrpc.version}</version>
 
     <name>czrpc-core</name>
     <description>czrpc-core</description>

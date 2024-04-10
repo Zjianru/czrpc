@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>com.cz</groupId>
 		<artifactId>czrpc</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+        <version>${czrpc.version}</version>
 	</parent>
 
 	<artifactId>czrpc-demo-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+    <version>${czrpc.version}</version>
 
 	<name>czrpc-demo-api</name>
 	<description>czrpc-demo-api</description>

@@ -6,7 +6,7 @@
 
     <groupId>com.cz</groupId>
     <artifactId>czrpc</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${czrpc.version}</version>
 
     <packaging>pom</packaging>
 
@@ -19,6 +19,7 @@
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <czrpc.version>0.0.1</czrpc.version>
     </properties>
     <modules>
         <module>czrpc-core</module>

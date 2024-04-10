@@ -1,14 +1,24 @@
 ### 测试获取用户信息 -8081
-POST http://192.168.31.151:8081/
+POST http://localhost:8081/
 Content-Type: application/json
 
 {
-  "service": "com.cz.demo.api.service.UserService",
-  "method": "findById",
-  "methodSign": "findById@1_int",
   "args": [
-    100
-  ]
+    122
+  ],
+  "argsType": [
+    "int"
+  ],
+  "method": {
+    "declaringClass": "com.cz.demo.api.service.UserService",
+    "name": "findById",
+    "parameterTypes": [
+      "int"
+    ]
+  },
+  "methodName": "findById",
+  "methodSign": "findById@1_int",
+  "service": "com.cz.demo.api.service.UserService"
 }
 
 ### 测试获取用户信息 - 8082

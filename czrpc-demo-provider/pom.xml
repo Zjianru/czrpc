@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.cz</groupId>
         <artifactId>czrpc</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${czrpc.version}</version>
     </parent>
 
     <artifactId>czrpc-demo-provider</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${czrpc.version}</version>
 
     <name>czrpc-demo-provider</name>
     <description>czrpc-demo-provider</description>
@@ -40,12 +40,12 @@
         <dependency>
             <groupId>com.cz</groupId>
             <artifactId>czrpc-demo-api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${czrpc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.cz</groupId>
             <artifactId>czrpc-core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${czrpc.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
