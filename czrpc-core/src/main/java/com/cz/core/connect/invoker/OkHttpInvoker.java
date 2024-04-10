@@ -28,7 +28,9 @@ public class OkHttpInvoker implements RpcConnect {
                 .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
                 .readTimeout(timeout, TimeUnit.MICROSECONDS)
                 .writeTimeout(timeout, TimeUnit.MICROSECONDS)
-                .connectTimeout(timeout, TimeUnit.MICROSECONDS).build();
+                .connectTimeout(timeout, TimeUnit.MICROSECONDS)
+                .retryOnConnectionFailure(true)
+                .build();
     }
 
     /**
