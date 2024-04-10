@@ -4,26 +4,26 @@ spring:
   application:
     name: czrpc-demo-consumer
 czrpc:
-  id: czrpc-demo
-  namespace: public
-  env: dev
-  #  [in context param] 重试机制
-  retries: 3
-  retryTimeout: 1000
-  # 服务元信息，灰度打标用 - [consumer only]
-  metas:
-    # [in context param] 灰度流量调拨比重 0-100
-    grayRadio: 10
+  # 应用级别的配置项
+  app:
+    applicationId: czrpc-demo
+    namespace: public
+    env: dev
+  consumer:
+    # 重试机制
+    retries: 3
+    retryTimeout: 1000
+    # 灰度流量调拨比重
+    grayRatio: 10
+    # 故障隔离与半开探活
+    halfOpenInitialDelay: 10
+    halfOpenDelay: 60
+    faultLimit: 10
   # 注册中心配置
   zkConfig:
     server: localhost:2181
     root: czrpc
-  # [in context param] 故障隔离与半开探活
-  isolate:
-    faultLimit: 10
-    halfOpen:
-      initialDelay: 10
-      delay: 60
+
 
 logging:
   level:

@@ -15,11 +15,11 @@ import java.util.Random;
  */
 public class GrayRouter implements Router<InstanceMeta> {
 
-    private final int grayRadio;
+    private final int grayRatio;
     private final Random random = new Random();
 
-    public GrayRouter(int grayRadio) {
-        this.grayRadio = grayRadio;
+    public GrayRouter(int grayRatio) {
+        this.grayRatio = grayRatio;
     }
 
     /**
@@ -48,9 +48,9 @@ public class GrayRouter implements Router<InstanceMeta> {
         if (normalNodes.isEmpty() || grayNodes.isEmpty()) {
             return providers;
         }
-        if (grayRadio <= 0) {
+        if (grayRatio <= 0) {
             return normalNodes;
-        } else if (grayRadio >= 100) {
+        } else if (grayRatio >= 100) {
             return grayNodes;
         }
 
@@ -58,7 +58,7 @@ public class GrayRouter implements Router<InstanceMeta> {
         // 前提：该方式要求 LB 为线性均匀的，流量能够平均的打到节点上
         // 流控实现方式二：加入一个随机数，该方式不依赖 LB 的策略，且遵循无状态的原则，公平的选取节点
         // 小基数看不出来平均 需要进行大基数测试，10000 次起
-        if (random.nextInt(100) < grayRadio) {
+        if (random.nextInt(100) < grayRatio) {
             return grayNodes;
         } else {
             return normalNodes;

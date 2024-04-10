@@ -4,11 +4,11 @@ spring:
   application:
     name: czrpc-demo-provider
 czrpc:
-  id: czrpc-demo
+  applicationId: czrpc-demo
   namespace: public
   env: dev
   #  服务元信息，灰度打标用 - [provider only]
-  metas:
+  provider:
     gray: false
     dc: bj
     unit: 001
