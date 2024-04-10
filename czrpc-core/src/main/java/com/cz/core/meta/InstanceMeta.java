@@ -84,7 +84,7 @@ public class InstanceMeta {
      * @return InstanceMeta
      */
     public static InstanceMeta http(String host, Integer port) {
-        return new InstanceMeta(host, port, "", "http", true, null);
+        return new InstanceMeta(host, port, "czrpc", "http", true, null);
     }
 
     /**

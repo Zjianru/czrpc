@@ -1,6 +1,8 @@
 package com.cz.core.provider;
 
 import com.cz.core.annotation.CzProvider;
+import com.cz.core.config.AppProperties;
+import com.cz.core.config.provider.ProviderProperties;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.meta.ServiceMeta;
@@ -10,7 +12,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.LinkedMultiValueMap;
@@ -19,7 +21,6 @@ import org.springframework.util.MultiValueMap;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,78 +29,55 @@ import java.util.Map;
  * @author Zjianru
  */
 @Data
+@Slf4j
 public class ProviderBootstrap implements ApplicationContextAware {
+
 
     /**
      * 容器上下文
      */
-    ApplicationContext applicationContext;
-
+    private ApplicationContext applicationContext;
     /**
      * 注册中心信息
      */
     private RegistryCenter registryCenter;
-
-    /**
-     * 提供者实例信息
-     */
-    private InstanceMeta instance;
-
     /**
      * 端口信息
      */
-    @Value("${server.port}")
     private String port;
-
     /**
-     * 应用标识
+     * 应用信息
      */
-    @Value("${czrpc.id}")
-    private String applicationId;
-
+    private AppProperties appProperties;
     /**
-     * 命名空间
+     * 提供者信息
      */
-    @Value("${czrpc.namespace}")
-    private String nameSpace;
-
-    /**
-     * 环境信息
-     */
-    @Value("${czrpc.env}")
-    private String env;
-
-    /**
-     * 机房信息
-     */
-    @Value("${czrpc.metas.dc}")
-    private String dc;
-
-    /**
-     * 单元信息
-     */
-    @Value("${czrpc.metas.unit}")
-    private String unit;
-
-    /**
-     * 是否开启灰度发布
-     */
-    @Value("${czrpc.metas.gray}")
-    private String gray;
-
-    /**
-     * 蓝绿发布 - 当前实例是否上线
-     */
-    @Value("${czrpc.metas.online}")
-    private String online;
-
-
+    private ProviderProperties providerProperties;
     /**
      * 服务提供者注册表 存储接口中方法级别的元数据
      * key: serviceMeta interface
      * value: 接口中的所有自定义方法
      */
     private MultiValueMap<String, ProviderMeta> skeleton = new LinkedMultiValueMap<>();
+    /**
+     * 提供者实例信息
+     */
+    private InstanceMeta instance;
+
+
+    /**
+     * constructor
+     *
+     * @param port               port
+     * @param appProperties      appProperties
+     * @param providerProperties providerProperties
+     */
+    public ProviderBootstrap(String port, AppProperties appProperties,
+                             ProviderProperties providerProperties) {
+        this.port = port;
+        this.appProperties = appProperties;
+        this.providerProperties = providerProperties;
+    }
 
     /**
      * 启动时完成 provider 注册
@@ -113,47 +91,24 @@ public class ProviderBootstrap implements ApplicationContextAware {
     }
 
     /**
-     * 服务下线
-     */
-    @PreDestroy
-    public void stop() {
-        skeleton.keySet().forEach(this::unRegisterService);
-    }
-
-    /**
      * 注册服务到 zookeeper
      */
     @SneakyThrows
     public void start() {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
-        // 实例打标
-        Map<String, String> params = new HashMap<>();
-        params.put("dc", dc);
-        params.put("unit", unit);
-        params.put("gray", gray);
-        params.put("online", online);
         instance = InstanceMeta.http(hostAddress, Integer.valueOf(port))
-                .addParams(params);
+                .addParams(providerProperties.getMetas());
         // 先启动客户端 后注册服务
         registryCenter.start();
         skeleton.keySet().forEach(this::registerService);
     }
 
-
     /**
-     * 服务与实例下线
-     *
-     * @param serviceInfo 服务信息
+     * 服务下线
      */
-    private void unRegisterService(String serviceInfo) {
-        ServiceMeta serviceMeta = ServiceMeta.builder()
-                .serviceName(serviceInfo)
-                .applicationId(applicationId)
-                .env(env)
-                .nameSpace(nameSpace)
-                .build();
-        // 先注销实例 后销毁客户端
-        registryCenter.unRegister(serviceMeta, instance);
+    @PreDestroy
+    public void stop() {
+        skeleton.keySet().forEach(this::unRegisterService);
     }
 
     /**
@@ -164,13 +119,28 @@ public class ProviderBootstrap implements ApplicationContextAware {
     private void registerService(String serviceInfo) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
                 .serviceName(serviceInfo)
-                .applicationId(applicationId)
-                .env(env)
-                .nameSpace(nameSpace)
+                .applicationId(appProperties.getApplicationId())
+                .env(appProperties.getEnv())
+                .nameSpace(appProperties.getNameSpace())
                 .build();
         registryCenter.register(serviceMeta, instance);
     }
 
+    /**
+     * 服务与实例下线
+     *
+     * @param serviceInfo 服务信息
+     */
+    private void unRegisterService(String serviceInfo) {
+        ServiceMeta serviceMeta = ServiceMeta.builder()
+                .serviceName(serviceInfo)
+                .applicationId(appProperties.getApplicationId())
+                .env(appProperties.getEnv())
+                .nameSpace(appProperties.getNameSpace())
+                .build();
+        // 先注销实例 后销毁客户端
+        registryCenter.unRegister(serviceMeta, instance);
+    }
 
     /**
      * 获取接口信息
@@ -184,7 +154,6 @@ public class ProviderBootstrap implements ApplicationContextAware {
                     .forEach(method -> createProvider(service, bean, method));
         });
     }
-
 
     /**
      * 装配元信息

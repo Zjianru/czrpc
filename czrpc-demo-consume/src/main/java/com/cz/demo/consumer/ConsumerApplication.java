@@ -1,7 +1,7 @@
 package com.cz.demo.consumer;
 
 import com.cz.core.annotation.CzConsumer;
-import com.cz.core.consumer.ConsumerConfig;
+import com.cz.core.config.consumer.ConsumerConfig;
 import com.cz.core.context.RpcContext;
 import com.cz.demo.api.pojo.User;
 import com.cz.demo.api.service.UserService;

@@ -1,5 +1,6 @@
 package com.cz.core.context;
 
+import com.cz.core.config.consumer.ConsumerProperties;
 import com.cz.core.filter.Filter;
 import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
@@ -38,22 +39,27 @@ public class RpcContext {
     /**
      * 服务元数据参数
      */
-    Map<String, String> params;
-
-    /**
-     * 重试次数
-     */
-    int retries;
-
-    /**
-     * 重试超时阈值
-     */
-    int retryTimeout;
+    private Map<String, String> params;
 
     /**
      * 跨线程传递参数
      */
     public static ThreadLocal<Map<String, String>> ContextParameters = ThreadLocal.withInitial(HashMap::new);
+
+    /**
+     * 消费端配置
+     */
+    private ConsumerProperties consumerProperties;
+
+    /**
+     * 从附加参数中取值
+     *
+     * @param key 配置 key
+     * @return value
+     */
+    public String getDataFromParam(String key) {
+        return params.get(key);
+    }
 
     public static void setContextParameter(String key, String value) {
         ContextParameters.get().put(key, value);

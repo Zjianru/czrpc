@@ -4,17 +4,14 @@ import com.cz.core.annotation.CzConsumer;
 import com.cz.core.consumer.proxy.ConsumerProxyFactory;
 import com.cz.core.context.RpcContext;
 import com.cz.core.filter.Filter;
-import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.meta.ServiceMeta;
 import com.cz.core.registry.RegistryCenter;
-import com.cz.core.router.Router;
 import com.cz.core.util.MethodUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
@@ -44,65 +41,6 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      */
     Environment environment;
 
-    /**
-     * 端口信息
-     */
-    @Value("${server.port}")
-    private String port;
-
-    /**
-     * 应用标识
-     */
-    @Value("${czrpc.id}")
-    private String applicationId;
-
-    /**
-     * 命名空间
-     */
-    @Value("${czrpc.namespace}")
-    private String nameSpace;
-
-    /**
-     * 环境信息
-     */
-    @Value("${czrpc.env}")
-    private String env;
-
-    /**
-     * 重试次数
-     */
-    @Value("${czrpc.retries:1}")
-    private int retries;
-
-    /**
-     * 重试阈值 - 超时达到此阈值，即进行重试
-     */
-    @Value("${czrpc.retryTimeout:1000}")
-    private int retryTimeout;
-
-    /**
-     * 半开探活初始延迟
-     */
-    @Value("${czrpc.isolate.halfOpen.initialDelay:10000}")
-    private long initialDelay;
-
-    /**
-     * 半开探活每次间隔，单位 - 毫秒
-     */
-    @Value("${czrpc.isolate.halfOpen.delay:60000}")
-    private long delay;
-
-    /**
-     * 请求 30 s 内错误阈值 - 超过此限制即进行故障隔离
-     */
-    @Value("${czrpc.isolate.faultLimit:1000}")
-    private int faultLimit;
-
-    /**
-     * 灰度 - 流量调拨比重 0-100
-     */
-    @Value("${czrpc.metas.grayRadio:10}")
-    private int grayRadio;
 
     /**
      * 注册中心信息
@@ -120,7 +58,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      */
     public void start() {
         // 初始化 rpcContext
-        RpcContext rpcContext = createContext();
+        RpcContext rpcContext = applicationContext.getBean(RpcContext.class);
         // 为 context 处理过滤器
         processFilter(rpcContext, null);
         // 获取注册中心信息
@@ -152,32 +90,7 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                 });
     }
 
-    /**
-     * wrapper context 信息
-     *
-     * @return rpcContext
-     */
-    private RpcContext createContext() {
-        // 获取负载均衡信息
-        Router<InstanceMeta> router = applicationContext.getBean(Router.class);
-        LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
-        RpcContext ctx = RpcContext.builder()
-                .filters(Collections.singletonList(DefaultFilter))
-                .loadBalancer(loadBalancer)
-                .router(router)
-                .retries(retries)
-                .build();
-        Map<String, String> params = new HashMap<>();
-        ctx.setParams(params);
-        // 放置超时重试配置
-        params.put("retries.retryTimeout", String.valueOf(retryTimeout));
-        // 放置半开探活配置
-        params.put("isolate.halfOpen.delay", String.valueOf(delay));
-        params.put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
-        // 灰度 - 流量调拨比重
-        params.put("metas.grayRadio", String.valueOf(grayRadio));
-        return ctx;
-    }
+
 
     /**
      * 处理过滤器链
@@ -209,9 +122,9 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
                 .serviceName(service.getCanonicalName())
-                .applicationId(applicationId)
-                .env(env)
-                .nameSpace(nameSpace)
+                .applicationId(rpcContext.getDataFromParam("czrpc.applicationId"))
+                .env(rpcContext.getDataFromParam("czrpc.env"))
+                .nameSpace(rpcContext.getDataFromParam("czrpc.nameSpace"))
                 .build();
         List<InstanceMeta> providerUrls = registryCenter.fetchAll(serviceMeta);
         registryCenter.subscribe(serviceMeta, event -> {

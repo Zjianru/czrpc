@@ -112,8 +112,9 @@ public class JdkProxyInvoker implements InvocationHandler {
                 .argsType(method.getParameterTypes())
                 .build();
         List<Filter> filters = context.getFilters();
-        int retries = context.getRetries();
-        int faultLimit = Integer.parseInt(context.getParams().getOrDefault("czrpc.isolate.faultLimit", "10"));
+
+        int retries = context.getConsumerProperties().getRetries();
+        int faultLimit = context.getConsumerProperties().getFaultLimit();
 
         while (retries-- > 0) {
             log.info("Invoke class [{}] method [{}] params: [{}], retry times: [{}]",
@@ -254,13 +255,12 @@ public class JdkProxyInvoker implements InvocationHandler {
         if (rpcResponse.isStatus()) {
             return TypeUtils.castMethodResult(method, rpcResponse.getData());
         } else {
-            // 服务端异常信息传播到客户端
-            Exception exception = rpcResponse.getException();
-            if (exception instanceof RpcException rpcException) {
-                throw rpcException;
-            } else {
-                throw new RpcException(exception, ExErrorCodes.UNKNOWN_ERROR);
+            RpcException exception = rpcResponse.getException();
+            if (exception != null) {
+                log.error("response error.", exception);
+                throw exception;
             }
+            return null;
         }
     }
 }
