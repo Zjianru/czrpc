@@ -4,11 +4,12 @@ spring:
   application:
     name: czrpc-demo-test-provider
 czrpc:
-  applicationId: czrpc-demo-test
-  namespace: public-test
-  env: dev
-  rpcVersion: 1.0.0
-  zkConfig:
+  # 应用级别的配置项
+  app:
+    applicationId: czrpc-demo-test
+    namespace: public-test
+    env: dev
+  registryCenter:
     server: localhost:2181
     root: czrpcTest
 logging:

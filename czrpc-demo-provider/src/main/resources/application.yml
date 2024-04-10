@@ -4,9 +4,11 @@ spring:
   application:
     name: czrpc-demo-provider
 czrpc:
-  applicationId: czrpc-demo
-  namespace: public
-  env: dev
+  # 应用级别的配置项
+  app:
+    applicationId: czrpc-demo
+    namespace: public
+    env: dev
   #  服务元信息，灰度打标用 - [provider only]
   provider:
     gray: false
@@ -14,7 +16,7 @@ czrpc:
     unit: 001
     online: true
   #    注册中心配置
-  zkConfig:
+  registryCenter:
     server: localhost:2181
     root: czrpc
 logging:

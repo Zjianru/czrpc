@@ -20,7 +20,7 @@ czrpc:
     halfOpenDelay: 60
     faultLimit: 10
   # 注册中心配置
-  zkConfig:
+  registryCenter:
     server: localhost:2181
     root: czrpc
 
