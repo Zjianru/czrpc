@@ -25,9 +25,12 @@ public class TypeUtils {
      * @return 转换后的数据
      */
     public static Object cast(Object origin, Class<?> type) {
+        log.debug("cast: origin = {}", origin);
+        log.debug("cast: type = {}", type);
         if (origin == null) return null;
         Class<?> aClass = origin.getClass();
         if (type.isAssignableFrom(aClass)) {
+            log.debug(" ======> assignable {} -> {}", aClass, type);
             return origin;
         }
 
@@ -35,8 +38,10 @@ public class TypeUtils {
             if (origin instanceof List list) {
                 origin = list.toArray();
             }
+            log.debug(" ======> list/[] -> []/{}", type);
             int length = Array.getLength(origin);
             Class<?> componentType = type.getComponentType();
+            log.debug(" ======> [] componentType : {}", componentType);
             Object resultArray = Array.newInstance(componentType, length);
             for (int i = 0; i < length; i++) {
                 if (componentType.isPrimitive() || componentType.getPackageName().startsWith("java")) {
@@ -51,6 +56,7 @@ public class TypeUtils {
         }
 
         if (origin instanceof HashMap map) {
+            log.debug(" ======> map -> {}", type);
             JSONObject jsonObject = new JSONObject(map);
             return jsonObject.toJavaObject(type);
         }
@@ -60,6 +66,7 @@ public class TypeUtils {
             return jsonObject.toJavaObject(type);
         }
 
+        log.debug(" ======> Primitive types.");
         if (type.equals(Integer.class) || type.equals(Integer.TYPE)) {
             return Integer.valueOf(origin.toString());
         } else if (type.equals(Long.class) || type.equals(Long.TYPE)) {

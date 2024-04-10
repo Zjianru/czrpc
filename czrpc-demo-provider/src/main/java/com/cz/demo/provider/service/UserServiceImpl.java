@@ -1,12 +1,15 @@
 package com.cz.demo.provider.service;
 
 import com.cz.core.annotation.CzProvider;
+import com.cz.core.context.RpcContext;
 import com.cz.demo.api.pojo.User;
 import com.cz.demo.api.service.UserService;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -18,17 +21,20 @@ import java.util.Map;
 @Service
 @CzProvider
 public class UserServiceImpl implements UserService {
+
     @Autowired
     Environment environment;
 
     @Override
     public User findById(int id) {
-        return new User(id, environment.getProperty("server.port", "") + "cz-" + System.currentTimeMillis());
+        return new User(id, "KK-V1-"
+                + environment.getProperty("server.port")
+                + "_" + System.currentTimeMillis());
     }
 
     @Override
     public User findById(int id, String name) {
-        return new User(id, environment.getProperty("server.port", "") + "cz-" + name + "_" + System.currentTimeMillis());
+        return new User(id, "KK-" + name + "_" + System.currentTimeMillis());
     }
 
     @Override
@@ -48,12 +54,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String getName() {
-        return environment.getProperty("server.port", "") + "cz123";
+        return "KK123";
     }
 
     @Override
     public String getName(int id) {
-        return environment.getProperty("server.port", "") + "cz-" + id;
+        return "Cola-" + id;
     }
 
     @Override
@@ -78,11 +84,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getList(List<User> userList) {
+        User[] users = userList.toArray(new User[userList.size()]);
+        System.out.println(" ==> userList.toArray()[] = ");
+        Arrays.stream(users).forEach(System.out::println);
+        userList.add(new User(2024, "KK2024"));
         return userList;
     }
 
     @Override
     public Map<String, User> getMap(Map<String, User> userMap) {
+        userMap.values().forEach(x -> System.out.println(x.getClass()));
+        User[] users = userMap.values().toArray(new User[userMap.size()]);
+        System.out.println(" ==> userMap.values().toArray()[] = ");
+        Arrays.stream(users).forEach(System.out::println);
+        userMap.put("A2024", new User(2024, "KK2024"));
         return userMap;
     }
 
@@ -102,22 +117,26 @@ public class UserServiceImpl implements UserService {
         return new User(100, "KK100");
     }
 
-    /**
-     * 模拟超时
-     *
-     * @param sleepTime 超时时间
-     * @return user
-     */
+    @Setter
+    String timeoutPorts = "8081,8094";
+
     @Override
-    public User mockTimeOut(int sleepTime) {
-        String currentPort = environment.getProperty("server.port", "");
-        if ("8081".equals(currentPort)) {
+    public User find(int timeout) {
+        String port = environment.getProperty("server.port");
+        if (Arrays.stream(timeoutPorts.split(",")).anyMatch(port::equals)) {
             try {
-                Thread.sleep(sleepTime);
+                Thread.sleep(timeout);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-        return new User(1001, "timeout-KK100");
+        return new User(1001, "KK1001-" + port);
+    }
+
+    @Override
+    public String echoParameter(String key) {
+        System.out.println(" ====>> RpcContext.ContextParameters: ");
+        RpcContext.ContextParameters.get().forEach((k, v) -> System.out.println(k + " -> " + v));
+        return RpcContext.getContextParameter(key);
     }
 }

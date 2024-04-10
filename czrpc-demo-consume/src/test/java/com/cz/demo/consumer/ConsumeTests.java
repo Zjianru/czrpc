@@ -40,7 +40,7 @@ class ConsumeTests {
     void contextLoads() {
         log.info(" ===> consumer testing  .... ");
         UserService bean = context.getBean(UserService.class);
-        User user = bean.mockTimeOut(1000);
+        User user = bean.find(1000);
         log.info("test finished result is {}", user);
     }
 
