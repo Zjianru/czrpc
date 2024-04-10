@@ -219,12 +219,12 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 .build();
         cache.getListenable().addListener((curator, event) -> {
             synchronized (ZookeeperRegistryCenter.class) {
-//                if (running) {
-                // 有任何节点变动 就会执行
-                log.info("zk subscribe event:{}", event);
-                List<InstanceMeta> metas = fetchAll(service);
-                listener.fire(new Event(metas));
-//                }
+                if (running) {
+                    // 有任何节点变动 就会执行
+                    log.info("zk subscribe event:{}", event);
+                    List<InstanceMeta> metas = fetchAll(service);
+                    listener.fire(new Event(metas));
+                }
             }
         });
         cache.start();
