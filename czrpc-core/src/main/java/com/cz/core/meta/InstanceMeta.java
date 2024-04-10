@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -49,6 +50,22 @@ public class InstanceMeta {
      * [蓝绿]-> online
      */
     private Map<String, String> params;
+
+    /**
+     * 设置附加参数列表
+     *
+     * @param params 附加参数
+     * @return instanceMeta
+     */
+    public InstanceMeta addParams(Map<String, String> params) {
+        Map<String, String> peek = this.getParams();
+        if (peek == null) {
+            peek = new HashMap<>();
+        }
+        peek.putAll(params);
+        this.setParams(peek);
+        return this;
+    }
 
     /**
      * 转换为注册中心的路径

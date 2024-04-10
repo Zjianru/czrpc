@@ -52,7 +52,7 @@ public class ProviderInvoker {
         } catch (InvocationTargetException e) {
             // 传播异常信息
             response.setException(new RpcException(e.getTargetException().getMessage(), ExErrorCodes.PROVIDER_ERROR));
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | IllegalArgumentException e) {
             response.setException(new RpcException(e.getMessage(), ExErrorCodes.PROVIDER_ERROR));
         }
         return response;

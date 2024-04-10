@@ -7,17 +7,20 @@ czrpc:
   id: czrpc-demo
   namespace: public
   env: dev
+  #  [in context param] 重试机制
   retries: 3
-  params:
-    invokeTimeout: 3000
-  #  服务元信息，灰度打标用 - [consumer only]
+  retryTimeout: 1000
+  # 服务元信息，灰度打标用 - [consumer only]
   metas:
-    grayRadio: 10 # 灰度 - 流量调拨比重 0-100
-  #    注册中心配置
+    # [in context param] 灰度流量调拨比重 0-100
+    grayRadio: 10
+  # 注册中心配置
   zkConfig:
     server: localhost:2181
     root: czrpc
+  # [in context param] 故障隔离与半开探活
   isolate:
+    faultLimit: 10
     halfOpen:
       initialDelay: 10
       delay: 60

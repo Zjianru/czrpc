@@ -11,6 +11,7 @@ import com.cz.core.registry.RegistryCenter;
 import com.cz.core.router.Router;
 import com.cz.core.util.MethodUtils;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,7 @@ import static com.cz.core.filter.Filter.DefaultFilter;
  * @author Zjianru
  */
 @Data
+@Slf4j
 public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAware {
 
     /**
@@ -75,20 +77,26 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     /**
      * 重试阈值 - 超时达到此阈值，即进行重试
      */
-    @Value("${czrpc.params.invokeTimeout:1000}")
-    private int invokeTimeout;
+    @Value("${czrpc.retryTimeout:1000}")
+    private int retryTimeout;
 
     /**
      * 半开探活初始延迟
      */
-    @Value("${czrpc.isolate.halfOpen.initialDelay:10}")
+    @Value("${czrpc.isolate.halfOpen.initialDelay:10000}")
     private long initialDelay;
 
     /**
-     * 半开探活每次间隔，单位 - 秒
+     * 半开探活每次间隔，单位 - 毫秒
      */
-    @Value("${czrpc.isolate.halfOpen.delay:60}")
+    @Value("${czrpc.isolate.halfOpen.delay:60000}")
     private long delay;
+
+    /**
+     * 请求 30 s 内错误阈值 - 超过此限制即进行故障隔离
+     */
+    @Value("${czrpc.isolate.faultLimit:1000}")
+    private int faultLimit;
 
     /**
      * 灰度 - 流量调拨比重 0-100
@@ -111,29 +119,11 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
      * 收集目前使用到的提供者服务信息
      */
     public void start() {
-        // 获取负载均衡信息
-        Router<InstanceMeta> router = applicationContext.getBean(Router.class);
-        LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
-
         // 初始化 rpcContext
-        RpcContext rpcContext = RpcContext.builder()
-                .filters(Collections.singletonList(DefaultFilter))
-                .loadBalancer(loadBalancer)
-                .router(router)
-                .retries(retries)
-                .build();
-        Map<String, String> params = new HashMap<>();
-        rpcContext.setParams(params);
-        // 放置超时重试配置
-        params.put("retries.invokeTimeout", String.valueOf(invokeTimeout));
-        // 放置半开探活配置
-        params.put("isolate.halfOpen.delay", String.valueOf(delay));
-        params.put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
-        // 灰度 - 流量调拨比重
-        params.put("metas.grayRadio", String.valueOf(grayRadio));
-        // 处理过滤器
+        RpcContext rpcContext = createContext();
+        // 为 context 处理过滤器
         processFilter(rpcContext, null);
-
+        // 获取注册中心信息
         RegistryCenter registryCenter = applicationContext.getBean(RegistryCenter.class);
         // 获取提供者服务信息
         String[] names = applicationContext.getBeanDefinitionNames();
@@ -142,9 +132,10 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                 .forEach(bean -> {
                     List<Field> fields = MethodUtils.findAnnotatedField(bean.getClass(), CzConsumer.class);
                     fields.forEach(field -> {
+                        Class<?> service = field.getType();
+                        String serviceName = service.getCanonicalName();
+                        log.info(" ===> {}", field.getName());
                         try {
-                            Class<?> service = field.getType();
-                            String serviceName = service.getCanonicalName();
                             Object consumer = stub.get(serviceName);
                             if (consumer == null) {
                                 consumer = createFromRegistry(service, rpcContext, registryCenter);
@@ -152,10 +143,40 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
                             }
                             field.setAccessible(true);
                             field.set(bean, consumer);
-                        } catch (IllegalAccessException ignored) {
+                        } catch (IllegalAccessException e) {
+                            // ignore and print it
+                            log.warn(" ==> Field[{}.{}] create consumer failed.", serviceName, field.getName());
+                            log.error("Ignore and print it as: ", e);
                         }
                     });
                 });
+    }
+
+    /**
+     * wrapper context 信息
+     *
+     * @return rpcContext
+     */
+    private RpcContext createContext() {
+        // 获取负载均衡信息
+        Router<InstanceMeta> router = applicationContext.getBean(Router.class);
+        LoadBalancer<InstanceMeta> loadBalancer = applicationContext.getBean(LoadBalancer.class);
+        RpcContext ctx = RpcContext.builder()
+                .filters(Collections.singletonList(DefaultFilter))
+                .loadBalancer(loadBalancer)
+                .router(router)
+                .retries(retries)
+                .build();
+        Map<String, String> params = new HashMap<>();
+        ctx.setParams(params);
+        // 放置超时重试配置
+        params.put("retries.retryTimeout", String.valueOf(retryTimeout));
+        // 放置半开探活配置
+        params.put("isolate.halfOpen.delay", String.valueOf(delay));
+        params.put("isolate.halfOpen.initialDelay", String.valueOf(initialDelay));
+        // 灰度 - 流量调拨比重
+        params.put("metas.grayRadio", String.valueOf(grayRadio));
+        return ctx;
     }
 
     /**

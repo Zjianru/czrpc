@@ -126,15 +126,14 @@ public class ProviderBootstrap implements ApplicationContextAware {
     @SneakyThrows
     public void start() {
         String hostAddress = InetAddress.getLocalHost().getHostAddress();
-        instance = InstanceMeta.http(hostAddress, Integer.valueOf(port));
         // 实例打标
         Map<String, String> params = new HashMap<>();
         params.put("dc", dc);
         params.put("unit", unit);
         params.put("gray", gray);
         params.put("online", online);
-        instance.setParams(params);
-
+        instance = InstanceMeta.http(hostAddress, Integer.valueOf(port))
+                .addParams(params);
         // 先启动客户端 后注册服务
         registryCenter.start();
         skeleton.keySet().forEach(this::registerService);

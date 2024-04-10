@@ -81,11 +81,11 @@ public class JdkProxyInvoker implements InvocationHandler {
         this.service = service;
         this.context = rpcContext;
         this.providerUrls = providerUrls;
-        int timeout = Integer.parseInt(context.getParams().getOrDefault("retries.invokeTimeout", "1000"));
+        int timeout = Integer.parseInt(context.getParams().getOrDefault("retries.retryTimeout", "1000"));
         this.rpcConnect = new OkHttpInvoker(timeout);
         isolateAndHalfOpenConfig(
-                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.initialDelay", "10")),
-                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.delay", "60"))
+                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.initialDelay", "10000")),
+                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.delay", "60000"))
         );
     }
 
@@ -107,6 +107,8 @@ public class JdkProxyInvoker implements InvocationHandler {
         RpcRequest request = new RpcRequest(service, method, method.getName(), MethodUtils.methodSign(method), args, method.getParameterTypes());
         List<Filter> filters = context.getFilters();
         int retries = context.getRetries();
+        int faultLimit = Integer.parseInt(context.getParams().getOrDefault("czrpc.isolate.faultLimit", "10"));
+
         while (retries-- > 0) {
             log.info("Invoke class [{}] method [{}] params: [{}], retry times: [{}]",
                     service, method.getName(), Arrays.toString(args), retries);
@@ -154,8 +156,8 @@ public class JdkProxyInvoker implements InvocationHandler {
                         window.record(System.currentTimeMillis());
                         int exceptionTimes = window.getSum();
                         log.debug("provider {} in window with {}", chosenProviderUrl, exceptionTimes);
-                        // 单位时间内异常次数超过 10 次，进行故障隔离
-                        if (exceptionTimes >= 10) {
+                        // 单位时间内异常次数超限，进行故障隔离
+                        if (exceptionTimes >= faultLimit) {
                             isolate(chosenProvider);
                         }
                     }
@@ -176,7 +178,8 @@ public class JdkProxyInvoker implements InvocationHandler {
                     if (!providerUrls.contains(chosenProvider)) {
                         isolatedInstance.remove(chosenProvider);
                         providerUrls.add(chosenProvider);
-                        log.debug("已放开被隔离的提供者节点，providerUrls==>{},isolatedInstance==>{}", providerUrls, isolatedInstance);
+                        log.debug("已放开被隔离的提供者节点==>{}，\n 当前 providerUrls==>{},\n 当前 isolatedInstance==>{}",
+                                chosenProvider, providerUrls, isolatedInstance);
                     }
                 }
 
@@ -194,7 +197,7 @@ public class JdkProxyInvoker implements InvocationHandler {
 
     /**
      * 配置半开探活的线程池
-     * 默认探活频次间隔 - 秒
+     * 默认探活频次间隔 - 毫秒
      *
      * @param initialDelay 初始延迟
      * @param delay        频次间隔
@@ -202,7 +205,7 @@ public class JdkProxyInvoker implements InvocationHandler {
     private void isolateAndHalfOpenConfig(long initialDelay, long delay) {
         this.executor = Executors.newScheduledThreadPool(1);
         // 在给定的初始延迟之后，按照固定的延迟时间周期性地执行任务
-        this.executor.scheduleWithFixedDelay(this::halfOpen, initialDelay, delay, TimeUnit.SECONDS);
+        this.executor.scheduleWithFixedDelay(this::halfOpen, initialDelay, delay, TimeUnit.MICROSECONDS);
     }
 
     /**
