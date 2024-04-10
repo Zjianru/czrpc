@@ -24,5 +24,9 @@ public class RpcRequest implements Serializable {
     private String methodSign;
     private Object[] args;
     private Class<?>[] argsType;
+    /**
+     * 跨调用方需要传递的参数
+     */
+    private Map<String, String> params = new HashMap<>();
 
 }

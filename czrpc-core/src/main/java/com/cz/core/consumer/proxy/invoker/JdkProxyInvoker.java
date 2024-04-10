@@ -104,7 +104,13 @@ public class JdkProxyInvoker implements InvocationHandler {
         if (MethodUtils.isLocalMethod(method)) {
             return null;
         }
-        RpcRequest request = new RpcRequest(service, method, method.getName(), MethodUtils.methodSign(method), args, method.getParameterTypes());
+        RpcRequest request = RpcRequest.builder()
+                .service(service)
+                .methodName(method.getName())
+                .methodSign(MethodUtils.methodSign(method))
+                .args(args)
+                .argsType(method.getParameterTypes())
+                .build();
         List<Filter> filters = context.getFilters();
         int retries = context.getRetries();
         int faultLimit = Integer.parseInt(context.getParams().getOrDefault("czrpc.isolate.faultLimit", "10"));

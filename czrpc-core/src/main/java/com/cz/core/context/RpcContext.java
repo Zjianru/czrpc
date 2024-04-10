@@ -7,6 +7,7 @@ import com.cz.core.router.Router;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,4 +49,23 @@ public class RpcContext {
      * 重试超时阈值
      */
     int retryTimeout;
+
+    /**
+     * 跨线程传递参数
+     */
+    public static ThreadLocal<Map<String, String>> ContextParameters = ThreadLocal.withInitial(HashMap::new);
+
+    public static void setContextParameter(String key, String value) {
+        ContextParameters.get().put(key, value);
+    }
+
+    public static String getContextParameter(String key) {
+        return ContextParameters.get().get(key);
+    }
+
+    public static void removeContextParameter(String key) {
+        ContextParameters.get().remove(key);
+    }
+
+
 }

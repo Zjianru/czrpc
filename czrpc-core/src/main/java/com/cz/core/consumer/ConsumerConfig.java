@@ -1,7 +1,7 @@
 package com.cz.core.consumer;
 
 import com.cz.core.filter.Filter;
-import com.cz.core.filter.policy.CacheFilter;
+import com.cz.core.filter.policy.RequestParamFilter;
 import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.loadBalance.policy.RoundRobinLoadBalancer;
 import com.cz.core.meta.InstanceMeta;
@@ -62,6 +62,7 @@ public class ConsumerConfig {
      */
     @Value("${czrpc.metas.grayRadio:10}")
     private int grayRadio;
+
     @Bean
     public Router<InstanceMeta> router() {
         return new GrayRouter(grayRadio);
@@ -82,9 +83,19 @@ public class ConsumerConfig {
      *
      * @return 过滤器实现
      */
+//    @Bean
+//    public Filter cacheFilter() {
+//        return new CacheFilter();
+//    }
+
+    /**
+     * 加载跨线程传递信息过滤器
+     *
+     * @return 过滤器实现
+     */
     @Bean
-    public Filter cacheFilter() {
-        return new CacheFilter();
+    public Filter RequestParamFilter() {
+        return new RequestParamFilter();
     }
 
     /**

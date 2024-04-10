@@ -1,11 +1,13 @@
 package com.cz.core.provider;
 
+import com.cz.core.context.RpcContext;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
 import com.cz.core.meta.ProviderMeta;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
 import com.cz.core.util.TypeUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +20,7 @@ import java.util.List;
  *
  * @author Zjianru
  */
+@Slf4j
 public class ProviderInvoker {
 
     /**
@@ -38,6 +41,10 @@ public class ProviderInvoker {
      * @return RPC 返回数据
      */
     public RpcResponse<Object> invoke(RpcRequest request) {
+        log.debug(" ===> ProviderInvoker.invoke(request:{})", request);
+        if (!request.getParams().isEmpty()) {
+            request.getParams().forEach(RpcContext::setContextParameter);
+        }
         String methodSign = request.getMethodSign();
         List<ProviderMeta> providerMetas = skeleton.get(request.getService().getCanonicalName());
         RpcResponse<Object> response = new RpcResponse<>();
@@ -54,7 +61,11 @@ public class ProviderInvoker {
             response.setException(new RpcException(e.getTargetException().getMessage(), ExErrorCodes.PROVIDER_ERROR));
         } catch (IllegalAccessException | IllegalArgumentException e) {
             response.setException(new RpcException(e.getMessage(), ExErrorCodes.PROVIDER_ERROR));
+        } finally {
+            // 防止内存泄露和上下文污染
+            RpcContext.ContextParameters.get().clear();
         }
+        log.debug(" ===> ProviderInvoker.invoke() = {}", response);
         return response;
     }
 

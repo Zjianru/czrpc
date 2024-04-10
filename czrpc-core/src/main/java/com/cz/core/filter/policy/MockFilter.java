@@ -3,9 +3,12 @@ package com.cz.core.filter.policy;
 import com.cz.core.filter.Filter;
 import com.cz.core.protocol.RpcRequest;
 import com.cz.core.protocol.RpcResponse;
+import com.cz.core.util.MethodUtils;
 import com.cz.core.util.MockUtils;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * 挡板拦截器
@@ -21,11 +24,12 @@ public class MockFilter implements Filter {
      * @return 过滤器处理结果
      */
     @Override
+    @SneakyThrows
     public Object perProcess(RpcRequest request) {
-        Method method = request.getMethod();
-        Class<?> returnType = method.getReturnType();
-        // 根据返回值类型  模拟返回值
-        return MockUtils.mock(returnType);
+        Class<?> service = Class.forName(String.valueOf(request.getService()));
+        Method method = findMethod(service, request.getMethodSign());
+        Class<?> clazz = method.getReturnType();
+        return MockUtils.mock(clazz);
     }
 
     /**
@@ -49,4 +53,13 @@ public class MockFilter implements Filter {
     public Filter next() {
         return null;
     }
+
+
+    private Method findMethod(Class service, String methodSign) {
+        return Arrays.stream(service.getMethods())
+                .filter(method -> !MethodUtils.isLocalMethod(method))
+                .filter(method -> methodSign.equals(MethodUtils.methodSign(method)))
+                .findFirst().orElse(null);
+    }
+
 }
