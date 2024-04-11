@@ -122,9 +122,9 @@ public class ConsumerBootstrap implements ApplicationContextAware, EnvironmentAw
     private Object createFromRegistry(Class<?> service, RpcContext rpcContext, RegistryCenter registryCenter) {
         ServiceMeta serviceMeta = ServiceMeta.builder()
                 .serviceName(service.getCanonicalName())
-                .applicationId(rpcContext.getDataFromParam("czrpc.applicationId"))
-                .env(rpcContext.getDataFromParam("czrpc.env"))
-                .nameSpace(rpcContext.getDataFromParam("czrpc.nameSpace"))
+                .applicationId(rpcContext.getDataFromParam("applicationId"))
+                .env(rpcContext.getDataFromParam("env"))
+                .nameSpace(rpcContext.getDataFromParam("nameSpace"))
                 .build();
         List<InstanceMeta> providerUrls = registryCenter.fetchAll(serviceMeta);
         registryCenter.subscribe(serviceMeta, event -> {

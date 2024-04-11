@@ -10,12 +10,9 @@ czrpc:
     namespace: public
     env: dev
   consumer:
-    # 重试机制
     retries: 3
     retryTimeout: 1000
-    # 灰度流量调拨比重
-    grayRatio: 10
-    # 故障隔离与半开探活
+    grayRatio: 0
     halfOpenInitialDelay: 10
     halfOpenDelay: 60
     faultLimit: 10

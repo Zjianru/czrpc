@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class AppProperties {
 
     // app id
-    private String applicationId = "app1";
+    private String applicationId = "czrpc-demo";
     // app name spase
     private String nameSpace = "public";
     // app env tag
