@@ -1,5 +1,6 @@
 package com.cz.core.provider;
 
+import com.cz.core.config.provider.ProviderPropertiesMeta;
 import com.cz.core.context.RpcContext;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
@@ -33,16 +34,25 @@ public class ProviderInvoker {
      */
     private final MultiValueMap<String, ProviderMeta> skeleton;
 
+    /**
+     * 流控阈值
+     */
     private final int trafficControl;
 
+    /**
+     * 滑动窗口
+     */
     final Map<String, SlidingTimeWindow> windows = new HashMap<>();
 
-    final Map<String, String> metas;
+    /**
+     * 提供者附加配置项
+     */
+    final Map<ProviderPropertiesMeta, String> metas;
 
     public ProviderInvoker(ProviderBootstrap providerBootstrap) {
         this.skeleton = providerBootstrap.getSkeleton();
         this.metas = providerBootstrap.getProviderProperties().getMetas();
-        this.trafficControl = Integer.parseInt(metas.getOrDefault("trafficControl", "20"));
+        this.trafficControl = Integer.parseInt(metas.getOrDefault(ProviderPropertiesMeta.TRAFFIC_CONTROL, "20"));
     }
 
     /**

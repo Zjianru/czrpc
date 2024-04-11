@@ -1,6 +1,7 @@
 package com.cz.core.meta;
 
 import com.alibaba.fastjson2.JSON;
+import com.cz.core.config.provider.ProviderPropertiesMeta;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -49,7 +50,7 @@ public class InstanceMeta {
      * [打标]-> gray/unit/dc
      * [蓝绿]-> online
      */
-    private Map<String, String> params;
+    private Map<ProviderPropertiesMeta, String> params;
 
     /**
      * 设置附加参数列表
@@ -57,8 +58,8 @@ public class InstanceMeta {
      * @param params 附加参数
      * @return instanceMeta
      */
-    public InstanceMeta addParams(Map<String, String> params) {
-        Map<String, String> peek = this.getParams();
+    public InstanceMeta addParams(Map<ProviderPropertiesMeta, String> params) {
+        Map<ProviderPropertiesMeta, String> peek = this.getParams();
         if (peek == null) {
             peek = new HashMap<>();
         }

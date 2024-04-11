@@ -23,18 +23,19 @@ public class ProviderProperties {
     String dc = "bj";
     String unit = "001";
     int trafficControl;
+
     /**
      * get metas
      *
      * @return metas
      */
-    public Map<String, String> getMetas() {
-        Map<String, String> metas = new HashMap<>();
-        metas.put("online", String.valueOf(online));
-        metas.put("gray", String.valueOf(gray));
-        metas.put("dc", dc);
-        metas.put("unit", unit);
-        metas.put("trafficControl", String.valueOf(trafficControl));
+    public Map<ProviderPropertiesMeta, String> getMetas() {
+        Map<ProviderPropertiesMeta, String> metas = new HashMap<>();
+        metas.put(ProviderPropertiesMeta.ONLINE, String.valueOf(online));
+        metas.put(ProviderPropertiesMeta.GRAY, String.valueOf(gray));
+        metas.put(ProviderPropertiesMeta.DC, dc);
+        metas.put(ProviderPropertiesMeta.UNIT, unit);
+        metas.put(ProviderPropertiesMeta.TRAFFIC_CONTROL, String.valueOf(trafficControl));
         return metas;
     }
 

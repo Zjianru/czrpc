@@ -81,12 +81,9 @@ public class JdkProxyInvoker implements InvocationHandler {
         this.service = service;
         this.context = rpcContext;
         this.providerUrls = providerUrls;
-        int timeout = Integer.parseInt(context.getParams().getOrDefault("retries.retryTimeout", "1000"));
+        int timeout = context.getConsumerProperties().getRetryTimeout();
         this.rpcConnect = new OkHttpInvoker(timeout);
-        isolateAndHalfOpenConfig(
-                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.initialDelay", "10000")),
-                Long.parseLong(context.getParams().getOrDefault("isolate.halfOpen.delay", "60000"))
-        );
+        isolateAndHalfOpenConfig(context);
     }
 
 
@@ -206,13 +203,14 @@ public class JdkProxyInvoker implements InvocationHandler {
      * 配置半开探活的线程池
      * 默认探活频次间隔 - 毫秒
      *
-     * @param initialDelay 初始延迟
-     * @param delay        频次间隔
+     * @param context RPC 上下文
      */
-    private void isolateAndHalfOpenConfig(long initialDelay, long delay) {
+    private void isolateAndHalfOpenConfig(RpcContext context) {
+        int halfOpenDelay = context.getConsumerProperties().getHalfOpenDelay();
+        int halfOpenInitialDelay = context.getConsumerProperties().getHalfOpenInitialDelay();
         this.executor = Executors.newScheduledThreadPool(1);
         // 在给定的初始延迟之后，按照固定的延迟时间周期性地执行任务
-        this.executor.scheduleWithFixedDelay(this::halfOpen, initialDelay, delay, TimeUnit.MICROSECONDS);
+        this.executor.scheduleWithFixedDelay(this::halfOpen, halfOpenInitialDelay, halfOpenDelay, TimeUnit.MICROSECONDS);
     }
 
     /**

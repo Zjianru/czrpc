@@ -1,5 +1,6 @@
 package com.cz.core.router.policy;
 
+import com.cz.core.config.provider.ProviderPropertiesMeta;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.router.Router;
 
@@ -38,7 +39,7 @@ public class GrayRouter implements Router<InstanceMeta> {
         }
 
         providers.forEach(provider -> {
-            if ("true".equals(provider.getParams().getOrDefault("gray", "false"))) {
+            if ("true".equals(provider.getParams().getOrDefault(ProviderPropertiesMeta.GRAY, "false"))) {
                 grayNodes.add(provider);
             } else {
                 normalNodes.add(provider);
