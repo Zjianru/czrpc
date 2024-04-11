@@ -13,31 +13,35 @@ import java.util.Map;
  * @author Zjianru
  */
 public class RequestParamFilter implements Filter {
+
     /**
-     * 过滤器
+     * 前置处理器
+     * 检测当前线程的上下文中是否存在待传递参数
      *
      * @param request 请求
      * @return 过滤器处理结果
      */
     @Override
     public Object perProcess(RpcRequest request) {
-        return null;
-    }
-
-    /**
-     * 后置处理
-     *
-     * @param request  请求
-     * @param response 响应
-     * @param result
-     * @return 过滤器处理结果
-     */
-    @Override
-    public Object postProcess(RpcRequest request, RpcResponse response, Object result) {
         Map<String, String> params = RpcContext.ContextParameters.get();
         if (!params.isEmpty()) {
             request.getParams().putAll(params);
         }
+        return null;
+    }
+
+    /**
+     * 后置处理器
+     * 清除掉当前线程上下文中的参数，防止内存泄露和上下文污染
+     *
+     * @param request  请求
+     * @param response 响应
+     * @param result   处理结果
+     * @return 过滤器处理结果
+     */
+    @Override
+    public Object postProcess(RpcRequest request, RpcResponse response, Object result) {
+        RpcContext.ContextParameters.get().clear();
         return null;
     }
 
