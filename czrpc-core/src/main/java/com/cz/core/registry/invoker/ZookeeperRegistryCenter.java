@@ -35,13 +35,13 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     /**
      * 环境信息
      */
-    @Value("${czrpc.registryCenter.server:localhost:2181}")
+    @Value("${czrpc.zookeeper.server:localhost:2181}")
     private String zkServer;
 
     /**
      * 环境信息
      */
-    @Value("${czrpc.registryCenter.root:czrpc}")
+    @Value("${czrpc.zookeeper.root:czrpc}")
     private String zkRoot;
 
     /**

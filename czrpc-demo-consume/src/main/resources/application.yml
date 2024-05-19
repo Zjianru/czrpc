@@ -17,9 +17,16 @@ czrpc:
     halfOpenDelay: 60
     faultLimit: 10
   # 注册中心配置
-  registryCenter:
+  # 使用 zookeeper
+  zookeeper:
     server: localhost:2181
     root: czrpc
+  # 使用 czRegistry
+  czRegistry:
+    servers:
+      - http://127.0.0.1:9090
+      - http://127.0.0.1:9091
+      - http://127.0.0.1:9092
 
 
 logging:

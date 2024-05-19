@@ -1,7 +1,7 @@
 package com.cz.core.consumer.proxy.invoker;
 
 import com.cz.core.connect.RpcConnect;
-import com.cz.core.connect.invoker.OkHttpInvoker;
+import com.cz.core.connect.invoker.HttpInvoker;
 import com.cz.core.context.RpcContext;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
@@ -82,7 +82,7 @@ public class JdkProxyInvoker implements InvocationHandler {
         this.context = rpcContext;
         this.providerUrls = providerUrls;
         int timeout = context.getConsumerProperties().getRetryTimeout();
-        this.rpcConnect = new OkHttpInvoker(timeout);
+        this.rpcConnect = new HttpInvoker(timeout);
         isolateAndHalfOpenConfig(context);
     }
 

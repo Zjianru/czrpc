@@ -18,12 +18,12 @@ import java.util.concurrent.TimeUnit;
  * @author Zjianru
  */
 @Service
-public class OkHttpInvoker implements RpcConnect {
+public class HttpInvoker implements RpcConnect {
     private final OkHttpClient client;
 
     MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
 
-    public OkHttpInvoker(int timeout) {
+    public HttpInvoker(int timeout) {
         client = new OkHttpClient.Builder()
                 .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS))
                 .readTimeout(timeout, TimeUnit.MICROSECONDS)
