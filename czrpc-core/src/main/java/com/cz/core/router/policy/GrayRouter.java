@@ -39,7 +39,7 @@ public class GrayRouter implements Router<InstanceMeta> {
         }
 
         providers.forEach(provider -> {
-            if ("true".equals(provider.getParams().getOrDefault(ProviderPropertiesMeta.GRAY, "false"))) {
+            if ("true".equals(provider.getParams().getOrDefault(ProviderPropertiesMeta.GRAY.toString(), "false"))) {
                 grayNodes.add(provider);
             } else {
                 normalNodes.add(provider);

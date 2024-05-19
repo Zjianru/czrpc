@@ -47,12 +47,12 @@ public class ProviderInvoker {
     /**
      * 提供者附加配置项
      */
-    final Map<ProviderPropertiesMeta, String> metas;
+    final Map<String, String> metas;
 
     public ProviderInvoker(ProviderBootstrap providerBootstrap) {
         this.skeleton = providerBootstrap.getSkeleton();
         this.metas = providerBootstrap.getProviderProperties().getMetas();
-        this.trafficControl = Integer.parseInt(metas.getOrDefault(ProviderPropertiesMeta.TRAFFIC_CONTROL, "20"));
+        this.trafficControl = Integer.parseInt(metas.getOrDefault(ProviderPropertiesMeta.TRAFFIC_CONTROL.toString(), "20"));
     }
 
     /**

@@ -29,13 +29,13 @@ public class ProviderProperties {
      *
      * @return metas
      */
-    public Map<ProviderPropertiesMeta, String> getMetas() {
-        Map<ProviderPropertiesMeta, String> metas = new HashMap<>();
-        metas.put(ProviderPropertiesMeta.ONLINE, String.valueOf(online));
-        metas.put(ProviderPropertiesMeta.GRAY, String.valueOf(gray));
-        metas.put(ProviderPropertiesMeta.DC, dc);
-        metas.put(ProviderPropertiesMeta.UNIT, unit);
-        metas.put(ProviderPropertiesMeta.TRAFFIC_CONTROL, String.valueOf(trafficControl));
+    public Map<String, String> getMetas() {
+        Map<String, String> metas = new HashMap<>();
+        metas.put(ProviderPropertiesMeta.ONLINE.toString(), String.valueOf(online));
+        metas.put(ProviderPropertiesMeta.GRAY.toString(), String.valueOf(gray));
+        metas.put(ProviderPropertiesMeta.DC.toString(), dc);
+        metas.put(ProviderPropertiesMeta.UNIT.toString(), unit);
+        metas.put(ProviderPropertiesMeta.TRAFFIC_CONTROL.toString(), String.valueOf(trafficControl));
         return metas;
     }
 
