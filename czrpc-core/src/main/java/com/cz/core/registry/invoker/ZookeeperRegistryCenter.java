@@ -1,4 +1,4 @@
-package com.cz.core.registry.impl;
+package com.cz.core.registry.invoker;
 
 import com.alibaba.fastjson2.JSON;
 import com.cz.core.ex.ExErrorCodes;
@@ -55,19 +55,10 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
     private final List<TreeCache> caches = new ArrayList<>();
 
     /**
-     * check param
-     */
-    private final boolean running = false;
-
-    /**
      * 启动注册中心客户端
      */
     @Override
     public void start() {
-        if (running) {
-            log.info(" ===> zk client has started to server[{}/{}], ignored.", zkServer, zkRoot);
-            return;
-        }
         // 重试策略
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         // 链接 zookeeper
@@ -85,10 +76,6 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
      */
     @Override
     public void stop() {
-        if (!running) {
-            log.info(" ===> zk client isn't running to server[{}/{}], ignored.", zkServer, zkRoot);
-            return;
-        }
         log.info("zookeeper registry center stop success!");
         caches.forEach(TreeCache::close);
         client.close();
@@ -219,12 +206,10 @@ public class ZookeeperRegistryCenter implements RegistryCenter {
                 .build();
         cache.getListenable().addListener((curator, event) -> {
             synchronized (ZookeeperRegistryCenter.class) {
-                if (running) {
-                    // 有任何节点变动 就会执行
-                    log.info("zk subscribe event:{}", event);
-                    List<InstanceMeta> metas = fetchAll(service);
-                    listener.fire(new Event(metas));
-                }
+                // 有任何节点变动 就会执行
+                log.info("zk subscribe event:{}", event);
+                List<InstanceMeta> metas = fetchAll(service);
+                listener.fire(new Event(metas));
             }
         });
         cache.start();

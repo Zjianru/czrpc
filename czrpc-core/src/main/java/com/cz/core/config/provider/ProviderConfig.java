@@ -4,7 +4,7 @@ import com.cz.core.config.AppProperties;
 import com.cz.core.provider.ProviderBootstrap;
 import com.cz.core.provider.ProviderInvoker;
 import com.cz.core.registry.RegistryCenter;
-import com.cz.core.registry.impl.ZookeeperRegistryCenter;
+import com.cz.core.registry.invoker.ZookeeperRegistryCenter;
 import com.cz.core.transport.SpringBootTransport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

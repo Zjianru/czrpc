@@ -9,7 +9,7 @@ import com.cz.core.loadBalance.LoadBalancer;
 import com.cz.core.loadBalance.policy.RoundRobinLoadBalancer;
 import com.cz.core.meta.InstanceMeta;
 import com.cz.core.registry.RegistryCenter;
-import com.cz.core.registry.impl.ZookeeperRegistryCenter;
+import com.cz.core.registry.invoker.ZookeeperRegistryCenter;
 import com.cz.core.router.Router;
 import com.cz.core.router.policy.GrayRouter;
 import lombok.extern.slf4j.Slf4j;
