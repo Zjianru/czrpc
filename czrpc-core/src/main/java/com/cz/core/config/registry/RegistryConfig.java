@@ -1,13 +1,10 @@
 package com.cz.core.config.registry;
 
-import com.cz.core.registry.channel.Channel;
-import com.cz.core.registry.channel.HttpChannel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * code desc
+ * 为三方注册中心提供配置
  *
  * @author Zjianru
  */
@@ -15,8 +12,5 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class RegistryConfig {
-    @Bean
-    public Channel channel() {
-        return new HttpChannel(5000);
-    }
+
 }

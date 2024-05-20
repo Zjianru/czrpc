@@ -36,4 +36,20 @@ public interface Channel {
      */
     <T> T get(String url, TypeReference<T> typeReference);
 
+
+    Channel defaultChannel = new HttpChannel(5000);
+
+    static <T> T httpGet(String url, Class<T> clazz) {
+        return defaultChannel.get(url, clazz);
+    }
+
+    static <T> T httpGet(String url, TypeReference<T> typeReference) {
+        return defaultChannel.get(url, typeReference);
+    }
+
+    static <T> T httpPost(String url, String param, Class<T> clazz) {
+        return defaultChannel.post(url, param, clazz);
+    }
+
+
 }

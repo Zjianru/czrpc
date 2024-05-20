@@ -34,9 +34,9 @@ public class HttpChannel implements Channel {
         // 配置OkHttpClient，包括连接池、超时设置、重试等
         client = new OkHttpClient.Builder()
                 .connectionPool(new ConnectionPool(16, 60, TimeUnit.SECONDS)) // 连接池
-                .readTimeout(timeout, TimeUnit.MICROSECONDS) // 读超时时间
-                .writeTimeout(timeout, TimeUnit.MICROSECONDS) // 写超时时间
-                .connectTimeout(timeout, TimeUnit.MICROSECONDS) // 连接超时时间
+                .readTimeout(timeout, TimeUnit.MILLISECONDS) // 读超时时间
+                .writeTimeout(timeout, TimeUnit.MILLISECONDS) // 写超时时间
+                .connectTimeout(timeout, TimeUnit.MILLISECONDS) // 连接超时时间
                 .retryOnConnectionFailure(true) // 是否重试连接失败
                 .build();
     }
@@ -68,7 +68,7 @@ public class HttpChannel implements Channel {
             String response = client.newCall(call).execute().body().string();
             log.debug("[method]postConnect ==> response {}", response);
             // 解析响应
-            return JSON.parseObject(response, clazz);
+            return clazz != null ? JSON.parseObject(response, clazz) : (T) response;
         } catch (Exception e) {
             // 抛出RPC异常
             throw new RpcException(e, ExErrorCodes.SOCKET_TIME_OUT);

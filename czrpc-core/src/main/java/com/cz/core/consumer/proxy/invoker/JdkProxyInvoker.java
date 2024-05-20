@@ -210,7 +210,7 @@ public class JdkProxyInvoker implements InvocationHandler {
         int halfOpenInitialDelay = context.getConsumerProperties().getHalfOpenInitialDelay();
         this.executor = Executors.newScheduledThreadPool(1);
         // 在给定的初始延迟之后，按照固定的延迟时间周期性地执行任务
-        this.executor.scheduleWithFixedDelay(this::halfOpen, halfOpenInitialDelay, halfOpenDelay, TimeUnit.MICROSECONDS);
+        this.executor.scheduleWithFixedDelay(this::halfOpen, halfOpenInitialDelay, halfOpenDelay, TimeUnit.MILLISECONDS);
     }
 
     /**
