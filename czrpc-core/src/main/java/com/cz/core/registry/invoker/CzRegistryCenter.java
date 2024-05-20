@@ -10,9 +10,10 @@ import com.cz.core.registry.listener.ChangedListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,21 +26,16 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CzRegistryCenter implements RegistryCenter {
 
-    /**
-     * 从配置中获取czRegistry服务器列表
-     */
     @Value("${czrpc.czRegistry.servers}")
     private String servers;
 
-
     private final HttpChannel channel;
+    private final Map<String, Long> VERSIONS = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService executor = null;
 
     public CzRegistryCenter(HttpChannel channel) {
         this.channel = channel;
     }
-
-    private final Map<String, Long> VERSIONS = new HashMap<>();
-    private final ScheduledExecutorService executor = null;
 
     /**
      * 启动 czRegistry 服务
@@ -77,13 +73,14 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void register(ServiceMeta service, InstanceMeta instance) {
-        // 日志记录注册服务开始
-        log.info("register service:{} with instance:{}", service, instance);
-        // 构建注册路径并发送注册请求
-        String path = servers + "/register?service=" + service.toPath();
-        channel.post(path, instance.dataToJson(), Void.class);
-        // 日志记录注册服务成功
-        log.info("register service:{} with instance:{} success", service, instance);
+        try {
+            log.info("register service:{} with instance:{}", service, instance);
+            String path = servers + "/register?service=" + service.toPath();
+            channel.post(path, instance.dataToJson(), Void.class);
+            log.info("register service:{} with instance:{} success", service, instance);
+        } catch (Exception e) {
+            log.error("Failed to register service: {}", service, e);
+        }
     }
 
     /**
@@ -94,13 +91,14 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void unRegister(ServiceMeta service, InstanceMeta instance) {
-        // 日志记录取消注册服务开始
-        log.info("unRegister service:{} with instance:{}", service, instance);
-        // 构建取消注册路径并发送请求
-        String path = servers + "/unregister?service=" + service.toPath();
-        channel.post(path, instance.dataToJson(), Void.class);
-        // 日志记录取消注册服务成功
-        log.info("unRegister service:{} with instance:{} success", service, instance);
+        try {
+            log.info("unRegister service:{} with instance:{}", service, instance);
+            String path = servers + "/unregister?service=" + service.toPath();
+            channel.post(path, instance.dataToJson(), Void.class);
+            log.info("unRegister service:{} with instance:{} success", service, instance);
+        } catch (Exception e) {
+            log.error("Failed to unregister service: {}", service, e);
+        }
     }
 
     /**
@@ -111,15 +109,17 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public List<InstanceMeta> fetchAll(ServiceMeta service) {
-        // 日志记录开始获取所有服务实例
-        log.info("fetchAll service:{} ", service);
-        // 构建获取所有实例路径并发送请求
-        String path = servers + "/fetchAll?service=" + service.toPath();
-        List<InstanceMeta> instanceMeta = channel.get(path, new TypeReference<>() {
-        });
-        // 日志记录获取所有服务实例成功
-        log.info("fetchAll service:{}  success, response is {}", service, instanceMeta);
-        return instanceMeta;
+        try {
+            log.info("fetchAll service:{} ", service);
+            String path = servers + "/fetchAll?service=" + service.toPath();
+            List<InstanceMeta> instanceMeta = channel.get(path, new TypeReference<>() {
+            });
+            log.info("fetchAll service:{}  success, response is {}", service, instanceMeta);
+            return instanceMeta;
+        } catch (Exception e) {
+            log.error("Failed to fetch all instances of service: {}", service, e);
+            return new ArrayList<>(); // 根据实际情况考虑是否返回空列表或抛出运行时异常
+        }
     }
 
     /**
@@ -130,25 +130,20 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void subscribe(ServiceMeta service, ChangedListener listener) {
-        // 使用定时任务定期查询服务版本并检查更新
         executor.scheduleWithFixedDelay(() -> {
-            // 获取当前版本号
             Long version = VERSIONS.getOrDefault(service.toPath(), -1L);
-            // 构建查询版本路径并发送请求
             String path = servers + "/version?service=" + service.toPath();
             log.info("subscribe service:{} with version:{}", service, version);
-            log.info("send msg to registry ,path is {}", path);
-            // 获取服务的最新版本号
-            Long responseVersion = channel.get(path, Long.class);
-            // 检查版本是否有更新
-            if (responseVersion > version) {
-                // 如果有更新，则获取所有实例并触发监听器事件
-                List<InstanceMeta> instanceMetas = fetchAll(service);
-                listener.fire(new Event(instanceMetas));
-                // 更新版本信息
-                VERSIONS.put(service.toPath(), responseVersion);
+            try {
+                Long responseVersion = channel.get(path, Long.class);
+                if (responseVersion > version) {
+                    List<InstanceMeta> instanceMetas = fetchAll(service);
+                    listener.fire(new Event(instanceMetas));
+                    VERSIONS.put(service.toPath(), responseVersion);
+                }
+            } catch (Exception e) {
+                log.error("Failed to subscribe service: {}", service, e);
             }
         }, 1000, 5000, TimeUnit.MILLISECONDS);
     }
-
 }
