@@ -247,8 +247,8 @@ public class JdkProxyInvoker implements InvocationHandler {
         if (rpcResponse == null) {
             return new RpcException(
                     String.format("Invoke class [%s] method [%s(%s)] error, params:[%S]",
-                            service, method.getName(), Arrays.toString(method.getParameterTypes()), Arrays.toString(args),
-                            ExErrorCodes.INVOKER_ERROR));
+                            service, method.getName(), Arrays.toString(method.getParameterTypes()), Arrays.toString(args)),
+                    ExErrorCodes.INVOKER_ERROR);
         }
         if (rpcResponse.isStatus()) {
             return TypeUtils.castMethodResult(method, rpcResponse.getData());
