@@ -104,4 +104,13 @@ public class InstanceMeta {
     public String metasTransfer() {
         return JSON.toJSONString(getParams());
     }
+
+    /**
+     * 将附加参数列表转换为 json 串
+     *
+     * @return json string
+     */
+    public String dataToJson() {
+        return JSON.toJSONString(this);
+    }
 }

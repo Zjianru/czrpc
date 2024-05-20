@@ -1,11 +1,14 @@
 package com.cz.core.registry.channel;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
 import com.cz.core.ex.ExErrorCodes;
 import com.cz.core.ex.RpcException;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 
@@ -48,6 +51,7 @@ public class HttpChannel implements Channel {
      * @throws RpcException 如果发生网络异常或超时，则抛出RpcException
      */
     @Override
+    @SneakyThrows
     public <T> T post(String url, String param, Class<T> clazz) {
         // 打印调试信息
         log.debug("[method]postConnect ==> url=={},param {}", url, param);
@@ -80,17 +84,12 @@ public class HttpChannel implements Channel {
      * @throws RpcException 如果发生网络异常或超时，则抛出RpcException
      */
     @Override
+    @SneakyThrows
     public <T> T get(String url, Class<T> clazz) {
         // 打印调试信息
         log.debug("[method]getConnect ==> url {}", url);
         try {
-            // 构建请求
-            Request call = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
-            // 执行请求并获取响应
-            String response = client.newCall(call).execute().body().string();
+            String response = getResponseWithGetMethod(url);
             log.debug("[method]getConnect ==> responseMsg {}", response);
             // 解析响应
             return JSON.parseObject(response, clazz);
@@ -99,6 +98,45 @@ public class HttpChannel implements Channel {
             throw new RpcException(e, ExErrorCodes.SOCKET_TIME_OUT);
         }
     }
+
+
+    /**
+     * 只使用 url 通信
+     *
+     * @param url           url
+     * @param typeReference target clazz
+     * @return response
+     */
+    @Override
+    @SneakyThrows
+    public <T> T get(String url, TypeReference<T> typeReference) {
+        // 打印调试信息
+        log.debug("[method]getConnect return typeReference ==> url {}", url);
+        try {
+            String response = getResponseWithGetMethod(url);
+            log.debug("[method]getConnect return typeReference ==> responseMsg {}", response);
+            // 解析响应
+            return JSON.parseObject(response, typeReference);
+        } catch (Exception e) {
+            // 抛出RPC异常
+            throw new RpcException(e, ExErrorCodes.SOCKET_TIME_OUT);
+        }
+    }
+
+
+    private String getResponseWithGetMethod(String url) throws IOException {
+        // 构建请求
+        Request call = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        // 执行请求并获取响应
+        return client.newCall(call).execute().body().string();
+    }
+
+
+
+
 }
 
 

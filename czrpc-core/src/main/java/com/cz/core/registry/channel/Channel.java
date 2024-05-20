@@ -1,5 +1,7 @@
 package com.cz.core.registry.channel;
 
+import com.alibaba.fastjson2.TypeReference;
+
 /**
  * code desc
  *
@@ -24,4 +26,14 @@ public interface Channel {
      * @return response
      */
     <T> T get(String url, Class<T> clazz);
+
+    /**
+     * 只使用 url 通信
+     *
+     * @param url           url
+     * @param typeReference target clazz
+     * @return response
+     */
+    <T> T get(String url, TypeReference<T> typeReference);
+
 }
