@@ -46,8 +46,8 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void start() {
-        healthChecker.start();
-        providerCheck();
+        healthChecker.start(); // 启动健康检查器
+        providerCheck(); // 检查提供者
         log.info("start czRegistry with server:{}", servers); // 记录启动时的服务器列表信息
     }
 
@@ -57,16 +57,16 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void stop() {
-        healthChecker.stop();
+        healthChecker.stop(); // 停止健康检查器
         log.info("stop czRegistry with server:{}", servers); // 记录停止时的服务器列表信息
     }
 
 
     /**
-     * 注册服务实例。
+     * 注册服务实例
      *
-     * @param service  服务元数据，包含服务名称等信息。
-     * @param instance 服务实例元数据，包含实例的IP、端口等信息。
+     * @param service  服务元数据，包含服务名称等信息
+     * @param instance 服务实例元数据，包含实例的IP、端口等信息
      */
     @Override
     public void register(ServiceMeta service, InstanceMeta instance) {
@@ -82,10 +82,10 @@ public class CzRegistryCenter implements RegistryCenter {
     }
 
     /**
-     * 取消注册服务实例。
+     * 取消注册服务实例
      *
-     * @param service  服务元数据。
-     * @param instance 服务实例元数据。
+     * @param service  服务元数据
+     * @param instance 服务实例元数据
      */
     @Override
     public void unRegister(ServiceMeta service, InstanceMeta instance) {
@@ -101,10 +101,10 @@ public class CzRegistryCenter implements RegistryCenter {
     }
 
     /**
-     * 获取指定服务的所有实例。
+     * 获取指定服务的所有实例
      *
-     * @param service 服务元数据。
-     * @return 返回该服务的所有实例列表。
+     * @param service 服务元数据
+     * @return 返回该服务的所有实例列表
      */
     @Override
     public List<InstanceMeta> fetchAll(ServiceMeta service) {
@@ -122,7 +122,7 @@ public class CzRegistryCenter implements RegistryCenter {
     }
 
     /**
-     * 订阅服务变化事件。
+     * 订阅服务变化事件
      *
      * @param service  服务元数据
      * @param listener 服务变化事件监听器
@@ -147,11 +147,21 @@ public class CzRegistryCenter implements RegistryCenter {
     }
 
 
+    /**
+     * 构建请求路径
+     *
+     * @param context     请求上下文
+     * @param serviceList 服务元数据列表
+     * @return 返回构建好的请求路径
+     */
     private String path(String context, List<ServiceMeta> serviceList) {
         String services = String.join(",", serviceList.stream().map(ServiceMeta::toPath).toList());
         return servers + context + "?services=" + services;
     }
 
+    /**
+     * 检查服务提供者
+     */
     public void providerCheck() {
         healthChecker.providerCheck(() -> needCheck.keySet().forEach(instance -> {
                     String path = path(ApiContext.reNews.name(), needCheck.get(instance));
