@@ -1,4 +1,4 @@
-package com.cz.core.registry.invoker;
+package com.cz.core.registry.invoker.czRegistry;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
@@ -10,6 +10,7 @@ import com.cz.core.registry.channel.Channel;
 import com.cz.core.registry.listener.ChangedListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -17,9 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * czRegistry 注册中心实现
@@ -27,16 +25,17 @@ import java.util.concurrent.TimeUnit;
  * @author Zjianru
  */
 @Slf4j
+@Component
 public class CzRegistryCenter implements RegistryCenter {
 
     @Value("${czrpc.czregistry.servers}")
     private String servers;
 
     private final Map<String, Long> VERSIONS = new ConcurrentHashMap<>();
-    private ScheduledExecutorService providerHealthChecker = null;
-    private ScheduledExecutorService consumerHealthChecker = null;
-    private ScheduledExecutorService subscribeExecutor = null;
+
     private final MultiValueMap<InstanceMeta, ServiceMeta> needCheck = new LinkedMultiValueMap<>();
+
+    HealthChecker healthChecker = new HealthChecker();
 
     public CzRegistryCenter() {
     }
@@ -47,20 +46,8 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void start() {
-        providerHealthChecker = Executors.newScheduledThreadPool(1);
-        consumerHealthChecker = Executors.newScheduledThreadPool(1);
-        subscribeExecutor = Executors.newScheduledThreadPool(1);
-        providerHealthChecker.scheduleAtFixedRate(() -> {
-                    needCheck.keySet().forEach(instance -> {
-                        String service = String.join(",", needCheck.get(instance).stream().map(ServiceMeta::toPath).toList());
-                        String path = servers + "/reNews?service=" + service;
-                        log.info("reNews start ======> path is {} , instance is {}", path, instance);
-                        Channel.httpPost(path, JSON.toJSONString(instance), Long.class);
-                        log.info("reNews end ====== ");
-                    });
-                },
-                5000, 5000, TimeUnit.MILLISECONDS);
-
+        healthChecker.start();
+        providerCheck();
         log.info("start czRegistry with server:{}", servers); // 记录启动时的服务器列表信息
     }
 
@@ -70,26 +57,10 @@ public class CzRegistryCenter implements RegistryCenter {
      */
     @Override
     public void stop() {
-        gracefulShutdown(providerHealthChecker);
-        gracefulShutdown(consumerHealthChecker);
-        gracefulShutdown(subscribeExecutor);
+        healthChecker.stop();
         log.info("stop czRegistry with server:{}", servers); // 记录停止时的服务器列表信息
     }
 
-    /**
-     * 优雅停机
-     */
-    private void gracefulShutdown(ScheduledExecutorService executor) {
-        try {
-            executor.shutdown();
-            executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
-            if (!executor.isTerminated()) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * 注册服务实例。
@@ -101,7 +72,7 @@ public class CzRegistryCenter implements RegistryCenter {
     public void register(ServiceMeta service, InstanceMeta instance) {
         try {
             log.info("register service:{} with instance:{}", service, instance);
-            String path = servers + "/register?service=" + service.toPath();
+            String path = path(ApiContext.register.name(), List.of(service));
             Channel.httpPost(path, instance.dataToJson(), null);
             needCheck.add(instance, service);
             log.info("register service:{} with instance:{} success", service, instance);
@@ -120,7 +91,7 @@ public class CzRegistryCenter implements RegistryCenter {
     public void unRegister(ServiceMeta service, InstanceMeta instance) {
         try {
             log.info("unRegister service:{} with instance:{}", service, instance);
-            String path = servers + "/unregister?service=" + service.toPath();
+            String path = path(ApiContext.unRegister.name(), List.of(service));
             Channel.httpPost(path, instance.dataToJson(), Void.class);
             needCheck.remove(instance, service);
             log.info("unRegister service:{} with instance:{} success", service, instance);
@@ -139,7 +110,7 @@ public class CzRegistryCenter implements RegistryCenter {
     public List<InstanceMeta> fetchAll(ServiceMeta service) {
         try {
             log.info("fetchAll service:{} ", service);
-            String path = servers + "/fetchAll?service=" + service.toPath();
+            String path = path(ApiContext.fetchAll.name(), List.of(service));
             List<InstanceMeta> instanceMeta = Channel.httpGet(path, new TypeReference<>() {
             });
             log.info("fetchAll service:{}  success, response is {}", service, instanceMeta);
@@ -153,14 +124,14 @@ public class CzRegistryCenter implements RegistryCenter {
     /**
      * 订阅服务变化事件。
      *
-     * @param service  服务元数据。
-     * @param listener 服务变化事件监听器。
+     * @param service  服务元数据
+     * @param listener 服务变化事件监听器
      */
     @Override
     public void subscribe(ServiceMeta service, ChangedListener listener) {
-        subscribeExecutor.scheduleWithFixedDelay(() -> {
+        healthChecker.consumerCheck(() -> {
             Long version = VERSIONS.getOrDefault(service.toPath(), -1L);
-            String path = servers + "/version?service=" + service.toPath();
+            String path = path(ApiContext.version.name(), List.of(service));
             log.info("subscribe service:{} with version:{}", service, version);
             try {
                 Long responseVersion = Channel.httpGet(path, Long.class);
@@ -172,6 +143,23 @@ public class CzRegistryCenter implements RegistryCenter {
             } catch (Exception e) {
                 log.error("Failed to subscribe service: {}", service, e);
             }
-        }, 1000, 5000, TimeUnit.MILLISECONDS);
+        });
     }
+
+
+    private String path(String context, List<ServiceMeta> serviceList) {
+        String services = String.join(",", serviceList.stream().map(ServiceMeta::toPath).toList());
+        return servers + context + "?services=" + services;
+    }
+
+    public void providerCheck() {
+        healthChecker.providerCheck(() -> needCheck.keySet().forEach(instance -> {
+                    String path = path(ApiContext.reNews.name(), needCheck.get(instance));
+                    log.info("reNews start ======> path is {} , instance is {}", path, instance);
+                    Channel.httpPost(path, JSON.toJSONString(instance), Long.class);
+                    log.info("reNews end ====== ");
+                }
+        ));
+    }
+
 }
