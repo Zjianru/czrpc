@@ -58,7 +58,6 @@ public class HttpChannel implements Channel {
         try {
             // 创建请求体
             RequestBody requestBody = RequestBody.create(JSON_TYPE, param);
-            log.debug("[method]postConnect ==> requestBody {}", requestBody);
             // 构建请求
             Request call = new Request.Builder()
                     .url(url)
