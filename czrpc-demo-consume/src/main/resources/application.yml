@@ -6,7 +6,7 @@ spring:
 czrpc:
   # 应用级别的配置项
   app:
-    applicationId: czrpc-demo-consumer
+    applicationId: czrpc-demo
     namespace: public
     env: dev
   consumer:
@@ -23,7 +23,7 @@ czrpc:
     root: czrpc
   # 使用 czRegistry
   czregistry:
-    servers: http://127.0.0.1:9090
+    servers: http://127.0.0.1:9090/
 
 logging:
   level:

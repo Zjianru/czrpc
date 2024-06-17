@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class CzRegistryCenter implements RegistryCenter {
 
-    @Value("${czrpc.czregistry.servers}")
+    @Value("${czrpc.czregistry.servers:http://127.0.0.1:9090/}")
     private String servers;
 
     private final Map<String, Long> VERSIONS = new ConcurrentHashMap<>();

@@ -64,6 +64,17 @@
             <artifactId>curator-test</artifactId>
             <version>5.1.0</version>
         </dependency>
+        <!-- 集成 czConfig 需要下面两个依赖-->
+        <dependency>
+            <groupId>com.cz</groupId>
+            <artifactId>czConfig-client</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-context</artifactId>
+            <version>4.1.2</version>
+        </dependency>
     </dependencies>
 
 </project>

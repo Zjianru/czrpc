@@ -36,6 +36,38 @@ czrpc 是一个向 dubbo看齐，并努力超越 dubbo 的 RPC 框架
   - 支持全链路灰度发布
 
 后续追加能力: 
-- 集成自研配置中心
-- 集成自研注册中心
-- 集成自研元数据中心
+
+- [x] 集成自研配置中心
+- [x] 集成自研注册中心
+- [ ] 集成自研元数据中心
+
+## 集成 czRegistry 注册中心
+
+czRegistry 注册中心目前已提供入口并完成适配
+顶层接口为`RegistryCenter`,具体实现为`CzRegistryCenter`
+可通过调整配置文件配置使用
+
+## 集成 czConfig 配置中心
+
+czConfig 配置中心目前已完成对接,可配置使用
+
+czrpc-core 中 pom 已添加如下依赖:
+
+```xml
+        <!-- 集成 czConfig 需要下面两个依赖-->
+<dependency>
+  <groupId>com.cz</groupId>
+  <artifactId>czConfig-client</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+<dependency>
+<groupId>org.springframework.cloud</groupId>
+<artifactId>spring-cloud-context</artifactId>
+<version>4.1.2</version>
+</dependency>
+```
+
+使用时 需要在使用 configuration 处 添加 `@EnableCzConfig`注解来启用
+
+配置使用与 spring 相同 可使用 spring 的 `@value` 注解 或 `@ConfigurationProperties` 注解来获取配置
+配置中心中数据发生时 将会有最晚 3s 的延迟, 将新的配置数据刷入

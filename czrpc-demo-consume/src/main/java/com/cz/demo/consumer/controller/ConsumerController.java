@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Zjianru
  */
 @RestController
+//@EnableCzConfig
 public class ConsumerController {
     @CzConsumer
     UserService userService;
